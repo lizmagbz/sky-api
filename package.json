@@ -1,0 +1,31 @@
+{
+  "name": "sky-api",
+  "version": "1.0.0",
+  "description": "API REST em Node.js com Clean Architecture, Supabase e JWT",
+  "type": "module",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js"
+  },
+  "keywords": [
+    "rest",
+    "supabase",
+    "jwt",
+    "clean-architecture"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.76.1",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "zod": "^4.1.12"
+  }
+}
