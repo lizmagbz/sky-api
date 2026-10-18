@@ -1,6 +1,6 @@
 # sky-api
 
-API REST em Node.js (JavaScript), organizada em Clean Architecture e alinhada aos princípios SOLID. O Postgres fica no Supabase. A autenticação emite JWT próprio da API.
+API REST em Node.js (JavaScript), organizada em Clean Architecture. O Postgres fica no Supabase e o acesso é feito pelo Prisma. A autenticação emite JWT próprio da API.
 
 ## Arquitetura
 
@@ -8,17 +8,18 @@ API REST em Node.js (JavaScript), organizada em Clean Architecture e alinhada ao
 src/
   domain/            regras e contratos (entidades, repositórios, erros)
   application/       casos de uso
-  infra/             Supabase, bcrypt e JWT
+  infra/             Prisma, bcrypt e JWT
   presentation/      Express: rotas, validação e middlewares
   app.js             composição das dependências
+prisma/              schema e migrations
 ```
 
-O domínio não importa Express nem Supabase. Os casos de uso dependem de contratos (`UserRepository`, `PasswordHasher`, `TokenProvider`). As implementações concretas entram só em `app.js`.
+O domínio não importa Express nem Prisma. Os casos de uso dependem de contratos (`UserRepository`, `PasswordHasher`, `TokenProvider`). As implementações concretas entram só em `app.js`.
 
 ## Pré-requisitos
 
-- Node.js 20 ou superior
-- Projeto no [Supabase](https://supabase.com)
+- Node.js 22.12 ou superior
+- Projeto Postgres no Supabase
 
 ## Configuração
 
@@ -28,20 +29,40 @@ O domínio não importa Express nem Supabase. Os casos de uso dependem de contra
 cp .env.example .env
 ```
 
-2. No painel do Supabase, em **Project Settings > API**, preencha `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY`.
+2. Troque `[YOUR-PASSWORD]` em `DATABASE_URL` e `DIRECT_URL` pela senha do banco (Project Settings > Database).
 3. Defina um `JWT_SECRET` longo e aleatório.
-4. No **SQL Editor** do Supabase, execute o arquivo `supabase/migrations/20261012000000_create_users.sql`.
+4. Instale as dependências e gere o client:
 
-A service role key fica só no servidor. Ela ignora RLS. A tabela `users` não tem política pública, então a chave anônima do Supabase não acessa os registros.
+```bash
+npm install
+npm run db:generate
+```
+
+5. Aplique a migration:
+
+```bash
+npm run db:deploy
+```
+
+`DATABASE_URL` é o pooler em modo transação (porta 6543). A API usa essa URL em runtime. `DIRECT_URL` é o pooler em modo sessão (porta 5432). O Prisma Migrate usa essa URL.
+
+A tabela `users` fica com RLS ligado e sem política pública. A conexão da API usa o papel `postgres`, que ignora o RLS. A chave anônima do Supabase não lê nem grava os registros.
+
+Se a tabela `users` já tiver sido criada pelo SQL antigo, não rode o deploy de novo. Marque a migration como aplicada:
+
+```bash
+npx prisma migrate resolve --applied 20261018000000_create_users
+```
 
 ## Executar
 
 ```bash
-npm install
 npm run dev
 ```
 
 Produção: `npm start`.
+
+Depois de alterar `prisma/schema.prisma`, rode `npm run db:generate` e crie uma nova migration antes do deploy.
 
 ## Endpoints
 
