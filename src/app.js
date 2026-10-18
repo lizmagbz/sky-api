@@ -4,8 +4,8 @@ import helmet from 'helmet';
 import { AuthenticateUser } from './application/use-cases/auth/AuthenticateUser.js';
 import { GetAuthenticatedUser } from './application/use-cases/auth/GetAuthenticatedUser.js';
 import { RegisterUser } from './application/use-cases/auth/RegisterUser.js';
-import { createSupabaseClient } from './infra/database/supabaseClient.js';
-import { SupabaseUserRepository } from './infra/repositories/SupabaseUserRepository.js';
+import { createPrismaClient } from './infra/database/prismaClient.js';
+import { PrismaUserRepository } from './infra/repositories/PrismaUserRepository.js';
 import { BcryptPasswordHasher } from './infra/security/BcryptPasswordHasher.js';
 import { JwtTokenProvider } from './infra/security/JwtTokenProvider.js';
 import { AuthController } from './presentation/http/controllers/AuthController.js';
@@ -13,8 +13,8 @@ import { errorHandler, notFoundHandler } from './presentation/http/middlewares/e
 import { createRouter } from './presentation/http/routes/index.js';
 
 export function createApp(env) {
-  const supabase = createSupabaseClient(env);
-  const userRepository = new SupabaseUserRepository(supabase);
+  const prisma = createPrismaClient(env.databaseUrl);
+  const userRepository = new PrismaUserRepository(prisma);
   const passwordHasher = new BcryptPasswordHasher();
   const tokenProvider = new JwtTokenProvider({
     secret: env.jwtSecret,
@@ -37,5 +37,5 @@ export function createApp(env) {
   app.use(notFoundHandler);
   app.use(errorHandler);
 
-  return app;
+  return { app, prisma };
 }
