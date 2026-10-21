@@ -1,6 +1,6 @@
 # sky-api
 
-API REST em Node.js (JavaScript), organizada em Clean Architecture. O Postgres fica no Supabase e o acesso é feito pelo Prisma. A autenticação emite JWT próprio da API.
+API REST em Node.js (JavaScript), organizada em Clean Architecture. O Postgres fica no Supabase que já existe e o acesso é feito pelo Prisma. O login continua no Supabase Auth. A tabela de pessoa é `public.user`, com o mesmo id de `auth.users`.
 
 ## Arquitetura
 
@@ -8,13 +8,13 @@ API REST em Node.js (JavaScript), organizada em Clean Architecture. O Postgres f
 src/
   domain/            regras e contratos (entidades, repositórios, erros)
   application/       casos de uso
-  infra/             Prisma, bcrypt e JWT
+  infra/             Prisma e Supabase Auth
   presentation/      Express: rotas, validação e middlewares
   app.js             composição das dependências
 prisma/              schema e migrations
 ```
 
-O domínio não importa Express nem Prisma. Os casos de uso dependem de contratos (`UserRepository`, `PasswordHasher`, `TokenProvider`). As implementações concretas entram só em `app.js`.
+O domínio não importa Express nem Prisma. Os casos de uso dependem de contratos (`UserRepository`, `AuthGateway`). As implementações concretas entram só em `app.js`.
 
 ## Pré-requisitos
 
@@ -30,7 +30,7 @@ cp .env.example .env
 ```
 
 2. Troque `[YOUR-PASSWORD]` em `DATABASE_URL` e `DIRECT_URL` pela senha do banco (Project Settings > Database).
-3. Defina um `JWT_SECRET` longo e aleatório.
+3. Preencha `SUPABASE_URL` e `SUPABASE_ANON_KEY` do mesmo projeto. A senha continua no Supabase Auth.
 4. Instale as dependências e gere o client:
 
 ```bash
@@ -38,21 +38,11 @@ npm install
 npm run db:generate
 ```
 
-5. Aplique a migration:
-
-```bash
-npm run db:deploy
-```
+5. Use o Supabase que já existe. A baseline `20261020133700_baseline_pastoral_schema` já está marcada como aplicada nele. Não rode `npm run db:deploy` para recriar tabelas.
 
 `DATABASE_URL` é o pooler em modo transação (porta 6543). A API usa essa URL em runtime. `DIRECT_URL` é o pooler em modo sessão (porta 5432). O Prisma Migrate usa essa URL.
 
-A tabela `users` fica com RLS ligado e sem política pública. A conexão da API usa o papel `postgres`, que ignora o RLS. A chave anônima do Supabase não lê nem grava os registros.
-
-Se a tabela `users` já tiver sido criada pelo SQL antigo, não rode o deploy de novo. Marque a migration como aplicada:
-
-```bash
-npx prisma migrate resolve --applied 20261018000000_create_users
-```
+O schema `public` é o do app: `user`, `school`, `unions`, `association`, `school_user`, `topics`, `records`, `record_files`, `user_goals`, `schedule_events` e as tabelas da refatoração v2. `user.id` acompanha `auth.users.id`. O login continua no Supabase Auth. O que falta para começar está em [`docs/migracao-supabase-backend.md`](docs/migracao-supabase-backend.md).
 
 ## Executar
 
@@ -71,7 +61,10 @@ Depois de alterar `prisma/schema.prisma`, rode `npm run db:generate` e crie uma 
 | GET | `/api/health` | não | Saúde da API |
 | POST | `/api/auth/register` | não | Cria usuário |
 | POST | `/api/auth/login` | não | Retorna `accessToken` |
-| GET | `/api/auth/me` | Bearer JWT | Usuário autenticado |
+| GET | `/api/auth/me` | Bearer do Auth | Usuário autenticado |
+| GET | `/api/me/schools` | Bearer do Auth | Escolas que o papel pode ver |
+
+Cadastro e login autenticam no Supabase Auth. A ficha lida é `public.user`, pelo mesmo id. O `accessToken` devolvido no login é o token do Auth. Detalhe em [`docs/migracao-supabase-backend.md`](docs/migracao-supabase-backend.md).
 
 Cadastro:
 

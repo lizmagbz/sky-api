@@ -6,8 +6,4 @@ export class UserRepository {
   async findById(_id) {
     throw new Error('UserRepository.findById não implementado');
   }
-
-  async create(_data) {
-    throw new Error('UserRepository.create não implementado');
-  }
 }
