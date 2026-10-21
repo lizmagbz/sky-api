@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const required = ['DATABASE_URL', 'DIRECT_URL', 'JWT_SECRET'];
+const required = ['DATABASE_URL', 'DIRECT_URL', 'SUPABASE_URL', 'SUPABASE_ANON_KEY'];
 
 export function loadEnv() {
   const missing = required.filter((key) => !process.env[key]?.trim());
@@ -16,7 +16,7 @@ export function loadEnv() {
   return {
     port: Number(process.env.PORT) || 3000,
     databaseUrl: process.env.DATABASE_URL,
-    jwtSecret: process.env.JWT_SECRET,
-    jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1d',
+    supabaseUrl: process.env.SUPABASE_URL,
+    supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
   };
 }

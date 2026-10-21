@@ -10,29 +10,18 @@ export class PrismaUserRepository extends UserRepository {
   }
 
   async findByEmail(email) {
-    const row = await this.#findUnique({ email });
+    const row = await this.#findFirst({ email, deletedAt: null });
     return this.#toEntity(row);
   }
 
   async findById(id) {
-    const row = await this.#findUnique({ id });
+    const row = await this.#findFirst({ id, deletedAt: null });
     return this.#toEntity(row);
   }
 
-  async create({ name, email, passwordHash }) {
+  async #findFirst(where) {
     try {
-      const row = await this.prisma.user.create({
-        data: { name, email, passwordHash },
-      });
-      return this.#toEntity(row);
-    } catch (error) {
-      throw this.#toCreateError(error);
-    }
-  }
-
-  async #findUnique(where) {
-    try {
-      return await this.prisma.user.findUnique({ where });
+      return await this.prisma.user.findFirst({ where });
     } catch (error) {
       return this.#recoverFind(error);
     }
@@ -43,20 +32,8 @@ export class PrismaUserRepository extends UserRepository {
     throw new AppError('Falha ao consultar usuário', 500);
   }
 
-  #toCreateError(error) {
-    if (this.#isUniqueEmail(error)) {
-      return new AppError('E-mail já cadastrado', 409);
-    }
-
-    return new AppError('Falha ao criar usuário', 500);
-  }
-
   #isInvalidIdentifier(error) {
     return error instanceof PrismaClientKnownRequestError && error.code === 'P2023';
-  }
-
-  #isUniqueEmail(error) {
-    return error instanceof PrismaClientKnownRequestError && error.code === 'P2002';
   }
 
   #toEntity(row) {
@@ -66,7 +43,7 @@ export class PrismaUserRepository extends UserRepository {
       id: row.id,
       name: row.name,
       email: row.email,
-      passwordHash: row.passwordHash,
+      role: row.role,
       createdAt: row.createdAt,
     });
   }

@@ -4,27 +4,35 @@ import helmet from 'helmet';
 import { AuthenticateUser } from './application/use-cases/auth/AuthenticateUser.js';
 import { GetAuthenticatedUser } from './application/use-cases/auth/GetAuthenticatedUser.js';
 import { RegisterUser } from './application/use-cases/auth/RegisterUser.js';
+import { ListAccessibleSchools } from './application/use-cases/schools/ListAccessibleSchools.js';
+import { UserDatabaseSession } from './infra/database/UserDatabaseSession.js';
 import { createPrismaClient } from './infra/database/prismaClient.js';
+import { PrismaAccessibleSchoolRepository } from './infra/repositories/PrismaAccessibleSchoolRepository.js';
 import { PrismaUserRepository } from './infra/repositories/PrismaUserRepository.js';
-import { BcryptPasswordHasher } from './infra/security/BcryptPasswordHasher.js';
-import { JwtTokenProvider } from './infra/security/JwtTokenProvider.js';
+import { SupabaseAuthGateway } from './infra/security/SupabaseAuthGateway.js';
 import { AuthController } from './presentation/http/controllers/AuthController.js';
+import { SchoolController } from './presentation/http/controllers/SchoolController.js';
 import { errorHandler, notFoundHandler } from './presentation/http/middlewares/errorHandler.js';
 import { createRouter } from './presentation/http/routes/index.js';
 
 export function createApp(env) {
   const prisma = createPrismaClient(env.databaseUrl);
   const userRepository = new PrismaUserRepository(prisma);
-  const passwordHasher = new BcryptPasswordHasher();
-  const tokenProvider = new JwtTokenProvider({
-    secret: env.jwtSecret,
-    expiresIn: env.jwtExpiresIn,
+  const authGateway = new SupabaseAuthGateway({
+    url: env.supabaseUrl,
+    anonKey: env.supabaseAnonKey,
   });
 
+  const session = new UserDatabaseSession(prisma);
   const authController = new AuthController({
-    registerUser: new RegisterUser({ userRepository, passwordHasher }),
-    authenticateUser: new AuthenticateUser({ userRepository, passwordHasher, tokenProvider }),
+    registerUser: new RegisterUser({ userRepository, authGateway }),
+    authenticateUser: new AuthenticateUser({ userRepository, authGateway }),
     getAuthenticatedUser: new GetAuthenticatedUser({ userRepository }),
+  });
+  const schoolController = new SchoolController({
+    listAccessibleSchools: new ListAccessibleSchools({
+      accessibleSchoolRepository: new PrismaAccessibleSchoolRepository(session),
+    }),
   });
 
   const app = express();
@@ -33,7 +41,7 @@ export function createApp(env) {
   app.use(cors());
   app.use(express.json());
 
-  app.use('/api', createRouter({ authController, tokenProvider }));
+  app.use('/api', createRouter({ authController, schoolController, authGateway }));
   app.use(notFoundHandler);
   app.use(errorHandler);
 

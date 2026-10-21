@@ -1,18 +1,297 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider        = "prisma-client"
+  output          = "../generated/prisma"
+  previewFeatures = ["partialIndexes", "views"]
 }
 
 datasource db {
   provider = "postgresql"
 }
 
-model User {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name         String
-  email        String   @unique
-  passwordHash String   @map("password_hash")
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+/// União. O índice primário no banco se chama union_pkey.
+model Union {
+  id              BigInt          @id(map: "union_pkey") @default(autoincrement())
+  name            String
+  associations    Association[]
+  records         Record[]
+  scheduleEvents  ScheduleEvent[]
+  users           User[]
 
-  @@map("users")
+  @@map("unions")
+}
+
+model Association {
+  id             BigInt          @id @default(autoincrement())
+  name           String
+  unionId        BigInt?         @map("union_id")
+  union          Union?          @relation(fields: [unionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  schools        School[]
+  scheduleEvents ScheduleEvent[]
+
+  @@index([unionId], map: "idx_association_union_id")
+  @@map("association")
+}
+
+model School {
+  id            BigInt       @id @default(autoincrement())
+  name          String
+  associationId BigInt?      @map("association_id")
+  association   Association? @relation(fields: [associationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  ministries    Ministry[]
+  records       Record[]
+  schoolUsers   SchoolUser[]
+
+  @@index([associationId], map: "idx_school_association_id")
+  @@map("school")
+}
+
+/// Perfil usado pelo app. O id acompanha auth.users; essa FK fica só no SQL.
+model User {
+  id            String       @id(map: "user_pkey") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  email         String
+  role          String?
+  createdAt     DateTime?    @map("created_at") @db.Timestamp(6)
+  avatarUrl     String?      @map("avatar_url")
+  deletedAt     DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  isAnonymized  Boolean      @default(false) @map("is_anonymized")
+  unionId       BigInt?      @map("union_id")
+  updatedAt     DateTime?    @default(now()) @map("updated_at") @db.Timestamptz(6)
+  avatarFocusX  Float        @default(0) @map("avatar_focus_x")
+  avatarFocusY  Float        @default(0) @map("avatar_focus_y")
+  union         Union?       @relation(fields: [unionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  memberships   Membership[]
+  records       Record[]
+  schoolUsers   SchoolUser[]
+
+  @@index([id], map: "idx_user_active", where: raw("(deleted_at IS NULL)"))
+  @@index([role], map: "idx_user_role")
+  @@index([unionId], map: "idx_user_union_id", where: raw("(union_id IS NOT NULL)"))
+  @@index([deletedAt], map: "user_deleted_at_idx", where: raw("(deleted_at IS NOT NULL)"))
+  @@index([unionId], map: "user_union_id_idx")
+  @@map("user")
+}
+
+model SchoolUser {
+  id        BigInt    @id @default(autoincrement())
+  schoolId  BigInt    @map("school_id")
+  userId    String    @map("user_id") @db.Uuid
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  school    School    @relation(fields: [schoolId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([schoolId, userId], map: "school_user_unique")
+  @@unique([userId, schoolId], map: "school_user_unique_pair")
+  @@unique([userId, schoolId], map: "school_user_user_school_key")
+  @@unique([userId, schoolId], map: "school_user_user_school_unique")
+  @@index([schoolId], map: "idx_school_user_school_id")
+  @@index([userId], map: "idx_school_user_user_id")
+  @@map("school_user")
+}
+
+model Ministry {
+  id          BigInt    @id @default(autoincrement())
+  name        String
+  description String?
+  schoolId    BigInt    @map("school_id")
+  createdAt   DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  school      School    @relation(fields: [schoolId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("ministry")
+}
+
+model Topic {
+  id          BigInt     @id @default(autoincrement())
+  name        String
+  description String?
+  createdAt   DateTime?  @default(now()) @map("created_at") @db.Timestamp(6)
+  slug        String?    @unique(map: "topics_slug_unique", where: raw("(slug IS NOT NULL)"))
+  records     Record[]
+  goals       UserGoal[]
+
+  @@map("topics")
+}
+
+model Record {
+  id           BigInt       @id @default(autoincrement())
+  userId       String?      @map("user_id") @db.Uuid
+  topicId      BigInt?      @map("topic_id")
+  schoolId     BigInt?      @map("school_id")
+  title        String?
+  description  String?
+  eventDate    DateTime?    @map("event_date") @db.Date
+  createdAt    DateTime?    @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt    DateTime?    @map("updated_at") @db.Timestamp(6)
+  peopleCount  Int?         @map("people_count")
+  eventEndDate DateTime?    @map("event_end_date") @db.Date
+  authorName   String?      @map("author_name")
+  unionId      BigInt?      @map("union_id")
+  imageUrl     String?      @map("image_url")
+  deletedAt    DateTime?    @map("deleted_at") @db.Timestamptz(6)
+  files        RecordFile[]
+  school       School?      @relation(fields: [schoolId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  topic        Topic?       @relation(fields: [topicId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  union        Union?       @relation(fields: [unionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  author       User?        @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  @@index([createdAt(sort: Desc)], map: "idx_records_active", where: raw("(deleted_at IS NULL)"))
+  @@index([createdAt(sort: Desc)], map: "idx_records_created_at_desc")
+  @@index([eventDate], map: "idx_records_event_date")
+  @@index([schoolId], map: "idx_records_school")
+  @@index([schoolId, createdAt(sort: Desc)], map: "idx_records_school_created_at", where: raw("(school_id IS NOT NULL)"))
+  @@index([topicId], map: "idx_records_topic")
+  @@index([topicId, eventDate], map: "idx_records_topic_event_date")
+  @@index([unionId, createdAt(sort: Desc)], map: "idx_records_union_created_at", where: raw("(union_id IS NOT NULL)"))
+  @@index([userId, eventDate], map: "idx_records_user_event_date")
+  @@index([unionId], map: "records_union_id_idx")
+  @@map("records")
+}
+
+model RecordFile {
+  id        BigInt    @id @default(autoincrement())
+  recordId  BigInt?   @map("record_id")
+  fileUrl   String    @map("file_url")
+  fileType  String?   @map("file_type")
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamp(6)
+  isCover   Boolean   @default(false) @map("is_cover")
+  focusX    Float     @default(0) @map("focus_x")
+  focusY    Float     @default(0) @map("focus_y")
+  record    Record?   @relation(fields: [recordId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([recordId], map: "idx_record_files_record_id")
+  @@map("record_files")
+}
+
+model UserGoal {
+  id          BigInt   @id @default(autoincrement())
+  userId      String   @map("user_id") @db.Uuid
+  topicId     BigInt   @map("topic_id")
+  targetCount Int      @map("target_count")
+  year        Int
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  topic       Topic    @relation(fields: [topicId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([userId, topicId, year], map: "user_goals_user_id_topic_id_year_key")
+  @@unique([userId, topicId, year], map: "user_goals_user_topic_year_key")
+  @@index([topicId], map: "idx_user_goals_topic_id")
+  @@index([userId, year], map: "idx_user_goals_user_year")
+  @@map("user_goals")
+}
+
+model ScheduleEvent {
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId           String       @map("user_id") @db.Uuid
+  title            String
+  startAt          DateTime     @map("start_at") @db.Timestamptz(6)
+  endAt            DateTime     @map("end_at") @db.Timestamptz(6)
+  createdAt        DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  googleEventId    String?      @map("google_event_id")
+  googleCalendarId String?      @map("google_calendar_id")
+  updatedAt        DateTime?    @default(now()) @map("updated_at") @db.Timestamptz(6)
+  isAllDay         Boolean      @default(false) @map("is_all_day")
+  description      String?
+  audience         String       @default("private")
+  associationId    BigInt?      @map("association_id")
+  unionId          BigInt?      @map("union_id")
+  association      Association? @relation(fields: [associationId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  union            Union?       @relation(fields: [unionId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+
+  @@unique([userId, googleEventId], map: "schedule_events_google_event_id_idx", where: raw("(google_event_id IS NOT NULL)"))
+  @@index([associationId, startAt], map: "idx_schedule_events_association_start", where: raw("(audience = 'association'::text)"))
+  @@index([googleEventId], map: "idx_schedule_events_google_event_id", where: raw("(google_event_id IS NOT NULL)"))
+  @@index([unionId, startAt], map: "idx_schedule_events_union_start", where: raw("(audience = 'union'::text)"))
+  @@index([userId, startAt], map: "idx_schedule_events_user_start")
+  @@index([startAt], map: "schedule_events_start_at_idx")
+  @@index([userId], map: "schedule_events_user_id_idx")
+  @@map("schedule_events")
+}
+
+model GoogleCalendarConnection {
+  userId           String    @id @map("user_id") @db.Uuid
+  googleCalendarId String    @map("google_calendar_id")
+  refreshToken     String    @map("refresh_token")
+  syncToken        String?   @map("sync_token")
+  connectedAt      DateTime? @default(now()) @map("connected_at") @db.Timestamptz(6)
+
+  @@map("user_google_calendar_connections")
+}
+
+model Role {
+  id          String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code        String       @unique(map: "roles_code_key")
+  label       String
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  memberships Membership[]
+
+  @@map("roles")
+}
+
+model Membership {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  roleId    String   @map("role_id") @db.Uuid
+  scopeType String   @map("scope_type")
+  scopeId   BigInt   @map("scope_id")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([userId, roleId, scopeType, scopeId], map: "memberships_user_role_scope_key")
+  @@index([roleId], map: "idx_memberships_role_id")
+  @@index([scopeType, scopeId], map: "idx_memberships_scope", where: raw("is_active"))
+  @@index([userId], map: "idx_memberships_user_id", where: raw("is_active"))
+  @@map("memberships")
+}
+
+/// Espelho de User. O id referencia auth.users; essa FK fica só no SQL.
+model Profile {
+  id        String    @id @db.Uuid
+  name      String    @default("")
+  email     String    @default("")
+  avatarUrl String?   @map("avatar_url")
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  @@index([email], map: "idx_profiles_email")
+  @@map("profiles")
+}
+
+model SchemaVersion {
+  id            Int      @id @default(1)
+  appCompat     String   @default("1.x") @map("app_compat")
+  targetRelease String   @default("2.0") @map("target_release")
+  lote          Int      @default(0)
+  notes         String?
+  appliedAt     DateTime @default(now()) @map("applied_at") @db.Timestamptz(6)
+
+  @@map("schema_version")
+}
+
+view Associations {
+  id      BigInt?
+  name    String?
+  unionId BigInt? @map("union_id")
+
+  @@map("associations")
+}
+
+view Schools {
+  id            BigInt?
+  name          String?
+  associationId BigInt? @map("association_id")
+
+  @@map("schools")
+}
+
+view SchoolMemberships {
+  id        BigInt?
+  userId    String?   @map("user_id") @db.Uuid
+  schoolId  BigInt?   @map("school_id")
+  createdAt DateTime? @map("created_at") @db.Timestamptz(6)
+
+  @@map("school_memberships")
 }

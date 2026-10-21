@@ -1,26 +1,24 @@
 import { AppError } from '../../../domain/errors/AppError.js';
 
 export class RegisterUser {
-  constructor({ userRepository, passwordHasher }) {
+  constructor({ userRepository, authGateway }) {
     this.userRepository = userRepository;
-    this.passwordHasher = passwordHasher;
+    this.authGateway = authGateway;
   }
 
   async execute({ name, email, password }) {
-    const normalizedEmail = email.trim().toLowerCase();
-    const existingUser = await this.userRepository.findByEmail(normalizedEmail);
-
-    if (existingUser) {
-      throw new AppError('E-mail já cadastrado', 409);
-    }
-
-    const passwordHash = await this.passwordHasher.hash(password);
-    const user = await this.userRepository.create({
+    const account = await this.authGateway.signUp({
       name: name.trim(),
-      email: normalizedEmail,
-      passwordHash,
+      email: email.trim().toLowerCase(),
+      password,
     });
-
+    const user = await this.#findUser(account.userId);
     return user.toPublic();
+  }
+
+  async #findUser(userId) {
+    const user = await this.userRepository.findById(userId);
+    if (!user) throw new AppError('Falha ao criar usuário', 500);
+    return user;
   }
 }
