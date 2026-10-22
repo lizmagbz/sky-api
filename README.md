@@ -31,14 +31,15 @@ cp .env.example .env
 
 2. Troque `[YOUR-PASSWORD]` em `DATABASE_URL` e `DIRECT_URL` pela senha do banco (Project Settings > Database).
 3. Preencha `SUPABASE_URL` e `SUPABASE_ANON_KEY` do mesmo projeto. A senha continua no Supabase Auth.
-4. Instale as dependências e gere o client:
+4. Preencha `SUPABASE_SERVICE_ROLE_KEY` do mesmo projeto. Ela fica só na API e grava o avatar no bucket `avatars`.
+5. Instale as dependências e gere o client:
 
 ```bash
 npm install
 npm run db:generate
 ```
 
-5. Use o Supabase que já existe. A baseline `20261020133700_baseline_pastoral_schema` já está marcada como aplicada nele. Não rode `npm run db:deploy` para recriar tabelas.
+6. Use o Supabase que já existe. A baseline `20261020133700_baseline_pastoral_schema` já está marcada como aplicada nele. Não rode `npm run db:deploy` para recriar tabelas.
 
 `DATABASE_URL` é o pooler em modo transação (porta 6543). A API usa essa URL em runtime. `DIRECT_URL` é o pooler em modo sessão (porta 5432). O Prisma Migrate usa essa URL.
 
@@ -63,6 +64,18 @@ Depois de alterar `prisma/schema.prisma`, rode `npm run db:generate` e crie uma 
 | POST | `/api/auth/login` | não | Retorna `accessToken` |
 | GET | `/api/auth/me` | Bearer do Auth | Usuário autenticado |
 | GET | `/api/me/schools` | Bearer do Auth | Escolas que o papel pode ver |
+| GET | `/api/users/me` | Bearer do Auth | Perfil com união, avatar e vínculos |
+| PATCH | `/api/users/me` | Bearer do Auth | Atualiza nome, papel, união e foco do avatar |
+| PUT | `/api/users/me/schools` | Bearer do Auth | Substitui vínculos `school_user` |
+| POST | `/api/users/me/avatar` | Bearer do Auth | Grava `avatars/{userId}/avatar.jpg` |
+| GET | `/api/me/schools/linked` | Bearer do Auth | Escolas do vínculo |
+| GET | `/api/me/association/schools` | Bearer do Auth | Escolas da associação no escopo |
+| GET | `/api/me/union` | Bearer do Auth | União atual |
+| GET | `/api/me/union/schools` | Bearer do Auth | Escolas da união |
+| GET | `/api/me/union/associations` | Bearer do Auth | Associações da união |
+| GET | `/api/me/schools/associations` | Bearer do Auth | Mapa escola–associação no escopo |
+| GET | `/api/schools` | não | Catálogo `id` e `name` |
+| GET | `/api/unions` | não | Catálogo `id` e `name` |
 
 Cadastro e login autenticam no Supabase Auth. A ficha lida é `public.user`, pelo mesmo id. O `accessToken` devolvido no login é o token do Auth. Detalhe em [`docs/migracao-supabase-backend.md`](docs/migracao-supabase-backend.md).
 

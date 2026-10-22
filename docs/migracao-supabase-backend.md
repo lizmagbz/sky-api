@@ -64,12 +64,12 @@ O app Flutter não entra nestes itens. Google Calendar, PDF e Excel continuam no
 
 ### Perfil e organização
 
-- [ ] `GET /api/users/me`: nome, e-mail, papel, união, avatar e vínculos `school_user` com a escola
-- [ ] `PATCH /api/users/me`: campos editáveis. Recusar mudança de papel ou de união fora da regra do app
-- [ ] Listagens no escopo da matriz: escolas vinculadas, escolas da associação, escolas e associações da união, união atual, mapa escola–associação
-- [ ] Um caso de uso substitui os vínculos: apaga os links informados e insere os novos. Coordenador de união não ganha `school_user` por esse caminho
-- [ ] `POST /api/users/me/avatar` grava no bucket `avatars`, caminho `{userId}/avatar.jpg`, e devolve a URL. A service key fica só na API
-- [ ] `GET /api/schools` e `GET /api/unions`, sem token: `id` e `name`, ordenados por nome. Sem vínculos de usuários
+- [x] `GET /api/users/me`: nome, e-mail, papel, união, avatar e vínculos `school_user` com a escola
+- [x] `PATCH /api/users/me`: campos editáveis. Recusar mudança de papel ou de união fora da regra do app
+- [x] Listagens no escopo da matriz: escolas vinculadas, escolas da associação, escolas e associações da união, união atual, mapa escola–associação
+- [x] Um caso de uso substitui os vínculos: apaga os links informados e insere os novos. Coordenador de união não ganha `school_user` por esse caminho
+- [x] `POST /api/users/me/avatar` grava no bucket `avatars`, caminho `{userId}/avatar.jpg`, e devolve a URL. A service key fica só na API
+- [x] `GET /api/schools` e `GET /api/unions`, sem token: `id` e `name`, ordenados por nome. Sem vínculos de usuários
 
 ### Registros, arquivos e tópicos
 
