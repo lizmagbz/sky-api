@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { authenticate } from '../middlewares/authenticate.js';
 import { validate } from '../middlewares/validate.js';
-import { loginSchema, registerSchema } from '../validators/authSchemas.js';
+import { loginSchema, reauthenticateSchema, registerSchema } from '../validators/authSchemas.js';
 
 export function createRouter({ authController, schoolController, authGateway }) {
   const router = Router();
@@ -13,6 +13,12 @@ export function createRouter({ authController, schoolController, authGateway }) 
   router.post('/auth/register', validate(registerSchema), authController.register);
   router.post('/auth/login', validate(loginSchema), authController.login);
   router.get('/auth/me', authenticate(authGateway), authController.me);
+  router.post(
+    '/auth/reauthenticate',
+    authenticate(authGateway),
+    validate(reauthenticateSchema),
+    authController.reauthenticate,
+  );
   router.get('/me/schools', authenticate(authGateway), schoolController.listMine);
 
   return router;

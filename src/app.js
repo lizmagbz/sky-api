@@ -3,6 +3,7 @@ import express from 'express';
 import helmet from 'helmet';
 import { AuthenticateUser } from './application/use-cases/auth/AuthenticateUser.js';
 import { GetAuthenticatedUser } from './application/use-cases/auth/GetAuthenticatedUser.js';
+import { ReauthenticateUser } from './application/use-cases/auth/ReauthenticateUser.js';
 import { RegisterUser } from './application/use-cases/auth/RegisterUser.js';
 import { ListAccessibleSchools } from './application/use-cases/schools/ListAccessibleSchools.js';
 import { UserDatabaseSession } from './infra/database/UserDatabaseSession.js';
@@ -28,6 +29,7 @@ export function createApp(env) {
     registerUser: new RegisterUser({ userRepository, authGateway }),
     authenticateUser: new AuthenticateUser({ userRepository, authGateway }),
     getAuthenticatedUser: new GetAuthenticatedUser({ userRepository }),
+    reauthenticateUser: new ReauthenticateUser({ userRepository, authGateway }),
   });
   const schoolController = new SchoolController({
     listAccessibleSchools: new ListAccessibleSchools({

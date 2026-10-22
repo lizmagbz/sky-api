@@ -16,3 +16,7 @@ export const loginSchema = z.object({
   email: z.email('E-mail inválido'),
   password: z.string().min(1, 'Senha obrigatória'),
 });
+
+export const reauthenticateSchema = z.object({
+  password: z.string().min(1, 'Senha obrigatória'),
+});

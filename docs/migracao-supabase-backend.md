@@ -58,7 +58,7 @@ O app Flutter não entra nestes itens. Google Calendar, PDF e Excel continuam no
 - [x] Cadastro com `role`, `schoolId`, `additionalSchoolIds` e `unionId`. Com `unionId`, gravar `user.union_id` e não criar `school_user`. Sem `unionId` e com escolas, inserir `school_user`
 - [x] A resposta do cadastro não devolve token
 - [x] Logout fica no app: descartar a sessão do Auth
-- [ ] `POST /api/auth/reauthenticate` confere a senha de novo no Auth. Senha errada responde 401
+- [x] `POST /api/auth/reauthenticate` confere a senha de novo no Auth. Senha errada responde 401
 - [ ] Recuperação de senha em três passos na API
 
 ### Perfil e organização
