@@ -73,6 +73,10 @@ export class SupabaseAuthGateway extends AuthGateway {
     await this.#put('/user', { password }, accessToken, 'updatePassword');
   }
 
+  async updateUserMetadata({ accessToken, data }) {
+    await this.#put('/user', { data }, accessToken, 'updateProfile');
+  }
+
   #recoverPath() {
     return `/recover?redirect_to=${encodeURIComponent(recoveryRedirectUrl)}`;
   }
@@ -151,6 +155,10 @@ export class SupabaseAuthGateway extends AuthGateway {
       return this.#updatePasswordError(status, body);
     }
 
+    if (purpose === 'updateProfile') {
+      return this.#updateProfileError(status);
+    }
+
     if (this.#isDuplicate(body)) {
       return new AppError('E-mail já cadastrado', 409);
     }
@@ -165,6 +173,12 @@ export class SupabaseAuthGateway extends AuthGateway {
     }
     if (status >= 500) return new AppError('Falha ao autenticar', 500);
     return new AppError('Não foi possível enviar o e-mail de recuperação', 400);
+  }
+
+  #updateProfileError(status) {
+    if (status === 401) return new AppError('Token inválido ou expirado', 401);
+    if (status >= 500) return new AppError('Falha ao autenticar', 500);
+    return new AppError('Não foi possível atualizar o perfil', 400);
   }
 
   #updatePasswordError(status, body) {

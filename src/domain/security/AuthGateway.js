@@ -22,4 +22,8 @@ export class AuthGateway {
   async updatePassword(_change) {
     throw new Error('AuthGateway.updatePassword não implementado');
   }
+
+  async updateUserMetadata(_profile) {
+    throw new Error('AuthGateway.updateUserMetadata não implementado');
+  }
 }

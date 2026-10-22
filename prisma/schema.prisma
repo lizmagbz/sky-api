@@ -57,8 +57,9 @@ model User {
   isAnonymized  Boolean      @default(false) @map("is_anonymized")
   unionId       BigInt?      @map("union_id")
   updatedAt     DateTime?    @default(now()) @map("updated_at") @db.Timestamptz(6)
-  avatarFocusX  Float        @default(0) @map("avatar_focus_x")
-  avatarFocusY  Float        @default(0) @map("avatar_focus_y")
+  avatarFocusX     Float        @default(0) @map("avatar_focus_x")
+  avatarFocusY     Float        @default(0) @map("avatar_focus_y")
+  avatarFocusScale Float        @default(1) @map("avatar_focus_scale")
   union         Union?       @relation(fields: [unionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   memberships   Membership[]
   records       Record[]
