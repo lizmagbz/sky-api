@@ -8,6 +8,7 @@ export function authenticate(authGateway) {
     try {
       const identity = await authGateway.identify(token);
       req.userId = identity.userId;
+      req.accessToken = token;
       return next();
     } catch (error) {
       return next(error);

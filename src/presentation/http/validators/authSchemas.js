@@ -20,3 +20,16 @@ export const loginSchema = z.object({
 export const reauthenticateSchema = z.object({
   password: z.string().min(1, 'Senha obrigatória'),
 });
+
+export const requestPasswordResetSchema = z.object({
+  email: z.email('E-mail inválido'),
+});
+
+export const verifyRecoveryCodeSchema = z.object({
+  email: z.email('E-mail inválido'),
+  code: z.string().trim().min(1, 'Código obrigatório'),
+});
+
+export const updatePasswordSchema = z.object({
+  password: z.string().min(8, 'Senha deve ter ao menos 8 caracteres'),
+});
