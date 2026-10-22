@@ -1,6 +1,8 @@
 import { AppError } from '../../domain/errors/AppError.js';
 import { AuthGateway } from '../../domain/security/AuthGateway.js';
 
+const recoveryRedirectUrl = 'com.mablye.sky://reset-password';
+
 export class SupabaseAuthGateway extends AuthGateway {
   constructor({ url, anonKey }) {
     super();
@@ -17,8 +19,12 @@ export class SupabaseAuthGateway extends AuthGateway {
     return { accessToken: body.access_token, userId: body.user.id };
   }
 
-  async signUp({ email, password, name }) {
-    const body = await this.#post('/signup', { email, password, data: { name } }, 'signUp');
+  async signUp({ email, password, name, role, schoolId }) {
+    const body = await this.#post('/signup', {
+      email,
+      password,
+      data: this.#signupData({ name, role, schoolId }),
+    }, 'signUp');
     if (this.#isDuplicateIdentity(body)) {
       throw new AppError('E-mail já cadastrado', 409);
     }
@@ -28,14 +34,55 @@ export class SupabaseAuthGateway extends AuthGateway {
     return { userId };
   }
 
+  #signupData({ name, role, schoolId }) {
+    const data = { name };
+    if (role) data.role = role;
+    if (schoolId != null) data.school_id = schoolId;
+    return data;
+  }
+
   async identify(token) {
     const body = await this.#get('/user', token);
     if (!body.id) throw new AppError('Token inválido ou expirado', 401);
     return { userId: body.id };
   }
 
+  async requestPasswordReset({ email }) {
+    const response = await this.#fetch(this.#recoverPath(), {
+      method: 'POST',
+      payload: { email },
+    });
+    const body = await this.#readBody(response);
+    if (response.ok) return;
+    if (this.#isUnknownAccount(body)) return;
+    throw this.#toError(response.status, body, 'recover');
+  }
+
+  async verifyRecoveryCode({ email, code }) {
+    const body = await this.#post('/verify', this.#recoveryProof(email, code), 'verifyRecovery');
+    if (!body.access_token) throw new AppError('Código inválido ou expirado', 401);
+    return { accessToken: body.access_token };
+  }
+
+  #recoveryProof(email, code) {
+    if (code.length > 12) return { type: 'recovery', token_hash: code };
+    return { type: 'recovery', email, token: code };
+  }
+
+  async updatePassword({ accessToken, password }) {
+    await this.#put('/user', { password }, accessToken, 'updatePassword');
+  }
+
+  #recoverPath() {
+    return `/recover?redirect_to=${encodeURIComponent(recoveryRedirectUrl)}`;
+  }
+
   async #post(path, payload, purpose) {
     return this.#send(path, { method: 'POST', payload, purpose });
+  }
+
+  async #put(path, payload, token, purpose) {
+    return this.#send(path, { method: 'PUT', payload, token, purpose });
   }
 
   async #get(path, token) {
@@ -92,6 +139,18 @@ export class SupabaseAuthGateway extends AuthGateway {
       return new AppError('Token inválido ou expirado', 401);
     }
 
+    if (purpose === 'verifyRecovery' && status < 500) {
+      return new AppError('Código inválido ou expirado', 401);
+    }
+
+    if (purpose === 'recover') {
+      return this.#recoverError(status, body);
+    }
+
+    if (purpose === 'updatePassword') {
+      return this.#updatePasswordError(status, body);
+    }
+
     if (this.#isDuplicate(body)) {
       return new AppError('E-mail já cadastrado', 409);
     }
@@ -100,10 +159,54 @@ export class SupabaseAuthGateway extends AuthGateway {
     return new AppError('Falha ao criar usuário', 400);
   }
 
+  #recoverError(status, body) {
+    if (this.#isRateLimit(body)) {
+      return new AppError('Aguarde alguns segundos antes de solicitar um novo e-mail.', 429);
+    }
+    if (status >= 500) return new AppError('Falha ao autenticar', 500);
+    return new AppError('Não foi possível enviar o e-mail de recuperação', 400);
+  }
+
+  #updatePasswordError(status, body) {
+    if (status === 401) return new AppError('Token inválido ou expirado', 401);
+    if (status === 422 || this.#isWeakPassword(body)) {
+      return new AppError('Senha não atende aos requisitos', 400);
+    }
+    if (status >= 500) return new AppError('Falha ao autenticar', 500);
+    return new AppError('Não foi possível redefinir a senha', 400);
+  }
+
   #isDuplicate(body) {
+    return this.#mentionsExistingAccount(this.#errorText(body));
+  }
+
+  #isUnknownAccount(body) {
+    const text = this.#errorText(body);
+    if (text.includes('user_not_found')) return true;
+    if (text.includes('user not found')) return true;
+    if (text.includes('email not found')) return true;
+    return false;
+  }
+
+  #isRateLimit(body) {
+    const text = this.#errorText(body);
+    if (text.includes('over_email_send_rate_limit')) return true;
+    if (text.includes('rate limit')) return true;
+    if (text.includes('too many')) return true;
+    return false;
+  }
+
+  #isWeakPassword(body) {
+    const text = this.#errorText(body);
+    if (text.includes('password')) return true;
+    if (text.includes('weak')) return true;
+    return false;
+  }
+
+  #errorText(body) {
     const code = String(body.code ?? body.error_code ?? body.error ?? '');
     const description = String(body.msg ?? body.error_description ?? body.message ?? '');
-    return this.#mentionsExistingAccount(`${code} ${description}`);
+    return `${code} ${description}`.toLowerCase();
   }
 
   #mentionsExistingAccount(text) {

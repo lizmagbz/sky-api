@@ -6,4 +6,12 @@ export class UserRepository {
   async findById(_id) {
     throw new Error('UserRepository.findById não implementado');
   }
+
+  async assignUnion(_userId, _unionId) {
+    throw new Error('UserRepository.assignUnion não implementado');
+  }
+
+  async linkSchools(_userId, _schoolIds) {
+    throw new Error('UserRepository.linkSchools não implementado');
+  }
 }

@@ -163,7 +163,7 @@ Espelho de `ScheduleService`. O Google continua no aparelho. A API só guarda `s
 
 Espelho de `AuthService.reauthenticateWithPassword`, `sendPasswordResetEmail`, `updatePassword` e `AccountDeletionService`.
 
-- [ ] `POST /api/auth/reauthenticate` com senha certa responde sucesso e não emite outro token. Senha errada, 401.
+- [x] `POST /api/auth/reauthenticate` com senha certa responde sucesso e não emite outro token. Senha errada, 401.
 - [ ] Pedido de recuperação para e-mail inexistente responde como sucesso.
 - [ ] Código expirado ou incorreto não altera a senha no Auth.
 - [ ] `POST /api/account` pede a senha de novo e apaga usuário, `school_user`, metas, agenda, registros e arquivos dos buckets `avatars` e `record-images`.

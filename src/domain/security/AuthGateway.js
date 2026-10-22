@@ -10,4 +10,16 @@ export class AuthGateway {
   async identify(_token) {
     throw new Error('AuthGateway.identify não implementado');
   }
+
+  async requestPasswordReset(_email) {
+    throw new Error('AuthGateway.requestPasswordReset não implementado');
+  }
+
+  async verifyRecoveryCode(_recovery) {
+    throw new Error('AuthGateway.verifyRecoveryCode não implementado');
+  }
+
+  async updatePassword(_change) {
+    throw new Error('AuthGateway.updatePassword não implementado');
+  }
 }

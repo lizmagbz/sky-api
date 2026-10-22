@@ -21,7 +21,8 @@ A baseline está marcada como aplicada nesse banco. Não rodar `npm run db:deplo
 - [x] Login, cadastro e `/me` pelo Supabase Auth
 - [x] Regra de pastor, coordenador e coordenador de união escrita no SQL da baseline (`can_access_school` e funções vizinhas)
 - [x] `GET /api/me/schools` aplica a regra com o id de quem logou. Pastor e coordenador usam `can_access_school`. Coordenador de união também vê as escolas da união em `user.union_id`
-- [ ] Recuperação de senha, reautenticação, perfil, registros, metas, agenda e exclusão de conta
+- [x] Recuperação de senha e reautenticação
+- [ ] Perfil, registros, metas, agenda e exclusão de conta
 
 ### 1. Vínculo das contas que já existem
 
@@ -34,7 +35,7 @@ A baseline está marcada como aplicada nesse banco. Não rodar `npm run db:deplo
 - [x] `GET /api/auth/me` valida o token no Auth e lê `public.user`.
 - [x] Credencial inválida responde 401 com a mesma mensagem para e-mail inexistente e senha errada.
 - [x] E-mail duplicado no cadastro responde 409.
-- [ ] Recuperação de senha na sky-api. Continua só no Auth do app.
+- [x] Recuperação de senha na sky-api, em três passos. A senha continua no Auth.
 
 ### 3. Escopo, depois do login
 
@@ -55,11 +56,11 @@ O app Flutter não entra nestes itens. Google Calendar, PDF e Excel continuam no
 ### Autenticação
 
 - [x] Login, cadastro mínimo (`name`, `email`, `password`) e `/me` pelo Supabase Auth, lendo `public.user` pelo mesmo id
-- [ ] Cadastro com `role`, `schoolId`, `additionalSchoolIds` e `unionId`. Com `unionId`, gravar `user.union_id` e não criar `school_user`. Sem `unionId` e com escolas, inserir `school_user`
+- [x] Cadastro com `role`, `schoolId`, `additionalSchoolIds` e `unionId`. Com `unionId`, gravar `user.union_id` e não criar `school_user`. Sem `unionId` e com escolas, inserir `school_user`
 - [x] A resposta do cadastro não devolve token
 - [x] Logout fica no app: descartar a sessão do Auth
-- [ ] `POST /api/auth/reauthenticate` confere a senha de novo no Auth. Senha errada responde 401
-- [ ] Recuperação de senha em três passos na API
+- [x] `POST /api/auth/reauthenticate` confere a senha de novo no Auth. Senha errada responde 401
+- [x] Recuperação de senha em três passos na API
 
 ### Perfil e organização
 

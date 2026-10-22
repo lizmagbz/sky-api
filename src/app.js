@@ -3,7 +3,11 @@ import express from 'express';
 import helmet from 'helmet';
 import { AuthenticateUser } from './application/use-cases/auth/AuthenticateUser.js';
 import { GetAuthenticatedUser } from './application/use-cases/auth/GetAuthenticatedUser.js';
+import { ReauthenticateUser } from './application/use-cases/auth/ReauthenticateUser.js';
 import { RegisterUser } from './application/use-cases/auth/RegisterUser.js';
+import { RequestPasswordReset } from './application/use-cases/auth/RequestPasswordReset.js';
+import { UpdatePassword } from './application/use-cases/auth/UpdatePassword.js';
+import { VerifyRecoveryCode } from './application/use-cases/auth/VerifyRecoveryCode.js';
 import { ListAccessibleSchools } from './application/use-cases/schools/ListAccessibleSchools.js';
 import { UserDatabaseSession } from './infra/database/UserDatabaseSession.js';
 import { createPrismaClient } from './infra/database/prismaClient.js';
@@ -28,6 +32,10 @@ export function createApp(env) {
     registerUser: new RegisterUser({ userRepository, authGateway }),
     authenticateUser: new AuthenticateUser({ userRepository, authGateway }),
     getAuthenticatedUser: new GetAuthenticatedUser({ userRepository }),
+    reauthenticateUser: new ReauthenticateUser({ userRepository, authGateway }),
+    requestPasswordReset: new RequestPasswordReset({ authGateway }),
+    verifyRecoveryCode: new VerifyRecoveryCode({ authGateway }),
+    updatePassword: new UpdatePassword({ authGateway }),
   });
   const schoolController = new SchoolController({
     listAccessibleSchools: new ListAccessibleSchools({
