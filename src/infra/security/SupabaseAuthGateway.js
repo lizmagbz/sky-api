@@ -17,8 +17,12 @@ export class SupabaseAuthGateway extends AuthGateway {
     return { accessToken: body.access_token, userId: body.user.id };
   }
 
-  async signUp({ email, password, name }) {
-    const body = await this.#post('/signup', { email, password, data: { name } }, 'signUp');
+  async signUp({ email, password, name, role, schoolId }) {
+    const body = await this.#post('/signup', {
+      email,
+      password,
+      data: this.#signupData({ name, role, schoolId }),
+    }, 'signUp');
     if (this.#isDuplicateIdentity(body)) {
       throw new AppError('E-mail já cadastrado', 409);
     }
@@ -26,6 +30,13 @@ export class SupabaseAuthGateway extends AuthGateway {
     const userId = body.user?.id ?? body.id;
     if (!userId) throw new AppError('Falha ao criar usuário', 500);
     return { userId };
+  }
+
+  #signupData({ name, role, schoolId }) {
+    const data = { name };
+    if (role) data.role = role;
+    if (schoolId != null) data.school_id = schoolId;
+    return data;
   }
 
   async identify(token) {

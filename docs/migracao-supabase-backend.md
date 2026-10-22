@@ -55,7 +55,7 @@ O app Flutter não entra nestes itens. Google Calendar, PDF e Excel continuam no
 ### Autenticação
 
 - [x] Login, cadastro mínimo (`name`, `email`, `password`) e `/me` pelo Supabase Auth, lendo `public.user` pelo mesmo id
-- [ ] Cadastro com `role`, `schoolId`, `additionalSchoolIds` e `unionId`. Com `unionId`, gravar `user.union_id` e não criar `school_user`. Sem `unionId` e com escolas, inserir `school_user`
+- [x] Cadastro com `role`, `schoolId`, `additionalSchoolIds` e `unionId`. Com `unionId`, gravar `user.union_id` e não criar `school_user`. Sem `unionId` e com escolas, inserir `school_user`
 - [x] A resposta do cadastro não devolve token
 - [x] Logout fica no app: descartar a sessão do Auth
 - [ ] `POST /api/auth/reauthenticate` confere a senha de novo no Auth. Senha errada responde 401
