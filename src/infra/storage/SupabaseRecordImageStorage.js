@@ -1,5 +1,6 @@
 import { AppError } from '../../domain/errors/AppError.js';
 import { RecordImageStorage } from '../../domain/storage/RecordImageStorage.js';
+import { listObjectPaths, mergePaths, namedFailures, removeObjects } from './removeBucketObjects.js';
 
 const recordImagesBucket = 'record-images';
 
@@ -17,11 +18,33 @@ export class SupabaseRecordImageStorage extends RecordImageStorage {
     return { fileUrl: this.#publicUrl(path) };
   }
 
+  assertReady() {
+    this.#assertConfigured();
+  }
+
   async remove(fileUrl) {
     const path = this.#pathFromUrl(fileUrl);
     if (!path) return;
     this.#assertConfigured();
     await this.#delete(path);
+  }
+
+  async removeOwned(userId, fileUrls) {
+    this.#assertConfigured();
+    const prefix = `${userId}/`;
+    const listed = await listObjectPaths({
+      url: this.url,
+      serviceRoleKey: this.serviceRoleKey,
+      bucket: recordImagesBucket,
+      prefix,
+    });
+    const failed = await removeObjects({
+      url: this.url,
+      serviceRoleKey: this.serviceRoleKey,
+      bucket: recordImagesBucket,
+      paths: mergePaths(this.#knownPaths(fileUrls), listed),
+    });
+    return namedFailures(recordImagesBucket, prefix, listed, failed);
   }
 
   #assertConfigured() {
@@ -88,6 +111,20 @@ export class SupabaseRecordImageStorage extends RecordImageStorage {
       'Content-Type': contentType,
       'x-upsert': 'false',
     };
+  }
+
+  #knownPaths(fileUrls) {
+    const paths = new Set();
+    for (const fileUrl of fileUrls ?? []) {
+      this.#addKnown(paths, fileUrl);
+    }
+    return paths;
+  }
+
+  #addKnown(paths, fileUrl) {
+    const path = this.#pathFromUrl(fileUrl);
+    if (!path) return;
+    paths.add(path);
   }
 
   #pathFromUrl(fileUrl) {

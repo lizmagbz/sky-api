@@ -1,6 +1,10 @@
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
+import { AccountErasure } from './application/use-cases/account/AccountErasure.js';
+import { DeleteAccount } from './application/use-cases/account/DeleteAccount.js';
+import { ExternalAccountRemoval } from './application/use-cases/account/ExternalAccountRemoval.js';
+import { OwnedFileRemoval } from './application/use-cases/account/OwnedFileRemoval.js';
 import { AuthenticateUser } from './application/use-cases/auth/AuthenticateUser.js';
 import { GetAuthenticatedUser } from './application/use-cases/auth/GetAuthenticatedUser.js';
 import { ReauthenticateUser } from './application/use-cases/auth/ReauthenticateUser.js';
@@ -41,6 +45,7 @@ import { ListAccessibleSchools } from './application/use-cases/schools/ListAcces
 import { UserDatabaseSession } from './infra/database/UserDatabaseSession.js';
 import { createPrismaClient } from './infra/database/prismaClient.js';
 import { PrismaAccessibleSchoolRepository } from './infra/repositories/PrismaAccessibleSchoolRepository.js';
+import { PrismaAccountRepository } from './infra/repositories/PrismaAccountRepository.js';
 import { PrismaCatalogRepository } from './infra/repositories/PrismaCatalogRepository.js';
 import { PrismaOrganizationRepository } from './infra/repositories/PrismaOrganizationRepository.js';
 import { PrismaProfileRepository } from './infra/repositories/PrismaProfileRepository.js';
@@ -49,9 +54,11 @@ import { PrismaRecordRepository } from './infra/repositories/PrismaRecordReposit
 import { PrismaScheduleEventRepository } from './infra/repositories/PrismaScheduleEventRepository.js';
 import { PrismaTopicRepository } from './infra/repositories/PrismaTopicRepository.js';
 import { PrismaUserRepository } from './infra/repositories/PrismaUserRepository.js';
+import { SupabaseAuthAdmin } from './infra/security/SupabaseAuthAdmin.js';
 import { SupabaseAuthGateway } from './infra/security/SupabaseAuthGateway.js';
 import { SupabaseAvatarStorage } from './infra/storage/SupabaseAvatarStorage.js';
 import { SupabaseRecordImageStorage } from './infra/storage/SupabaseRecordImageStorage.js';
+import { AccountController } from './presentation/http/controllers/AccountController.js';
 import { AuthController } from './presentation/http/controllers/AuthController.js';
 import { CatalogController } from './presentation/http/controllers/CatalogController.js';
 import { GoalController } from './presentation/http/controllers/GoalController.js';
@@ -77,11 +84,20 @@ export function createApp(env) {
   const profileRepository = new PrismaProfileRepository(prisma);
   const organizationRepository = new PrismaOrganizationRepository(session);
   const catalogRepository = new PrismaCatalogRepository(prisma);
+  const reauthenticateUser = new ReauthenticateUser({ userRepository, authGateway });
+  const avatarStorage = new SupabaseAvatarStorage({
+    url: env.supabaseUrl,
+    serviceRoleKey: env.supabaseServiceRoleKey,
+  });
+  const recordImageStorage = new SupabaseRecordImageStorage({
+    url: env.supabaseUrl,
+    serviceRoleKey: env.supabaseServiceRoleKey,
+  });
   const authController = new AuthController({
     registerUser: new RegisterUser({ userRepository, authGateway }),
     authenticateUser: new AuthenticateUser({ userRepository, authGateway }),
     getAuthenticatedUser: new GetAuthenticatedUser({ userRepository }),
-    reauthenticateUser: new ReauthenticateUser({ userRepository, authGateway }),
+    reauthenticateUser,
     requestPasswordReset: new RequestPasswordReset({ authGateway }),
     verifyRecoveryCode: new VerifyRecoveryCode({ authGateway }),
     updatePassword: new UpdatePassword({ authGateway }),
@@ -97,9 +113,21 @@ export function createApp(env) {
     replaceSchoolLinks: new ReplaceSchoolLinks({ profileRepository }),
     uploadAvatar: new UploadAvatar({
       profileRepository,
-      avatarStorage: new SupabaseAvatarStorage({
-        url: env.supabaseUrl,
-        serviceRoleKey: env.supabaseServiceRoleKey,
+      avatarStorage,
+    }),
+  });
+  const accountController = new AccountController({
+    deleteAccount: new DeleteAccount({
+      reauthenticateUser,
+      accountErasure: new AccountErasure({
+        accountRepository: new PrismaAccountRepository(session),
+        externalRemoval: new ExternalAccountRemoval({
+          ownedFileRemoval: new OwnedFileRemoval({ avatarStorage, recordImageStorage }),
+          authAdmin: new SupabaseAuthAdmin({
+            url: env.supabaseUrl,
+            serviceRoleKey: env.supabaseServiceRoleKey,
+          }),
+        }),
       }),
     }),
   });
@@ -116,10 +144,6 @@ export function createApp(env) {
     listPublicUnions: new ListPublicUnions({ catalogRepository }),
   });
   const recordRepository = new PrismaRecordRepository(session);
-  const recordImageStorage = new SupabaseRecordImageStorage({
-    url: env.supabaseUrl,
-    serviceRoleKey: env.supabaseServiceRoleKey,
-  });
   const topicController = new TopicController({
     listTopics: new ListTopics({ topicRepository: new PrismaTopicRepository(prisma) }),
   });
@@ -158,6 +182,7 @@ export function createApp(env) {
 
   app.use('/api', createRouter({
     authController,
+    accountController,
     schoolController,
     userController,
     organizationController,

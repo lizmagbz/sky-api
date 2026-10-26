@@ -23,7 +23,7 @@ A baseline está marcada como aplicada nesse banco. Não rodar `npm run db:deplo
 - [x] `GET /api/me/schools` aplica a regra com o id de quem logou. Pastor e coordenador usam `can_access_school`. Coordenador de união também vê as escolas da união em `user.union_id`
 - [x] Recuperação de senha e reautenticação
 - [x] Metas e agenda
-- [ ] Exclusão de conta
+- [x] Exclusão de conta
 
 ### 1. Vínculo das contas que já existem
 
@@ -92,8 +92,8 @@ O app Flutter não entra nestes itens. Google Calendar, PDF e Excel continuam no
 
 ### Exclusão de conta
 
-- [ ] `POST /api/account` exige a senha de novo no Auth e apaga o usuário no Auth, os vínculos, metas, agenda, registros e arquivos dos buckets `avatars` e `record-images`
-- [ ] Falha no meio do caminho deixa registrado o que ficou
+- [x] `POST /api/account` exige a senha de novo no Auth e apaga o usuário no Auth, os vínculos, metas, agenda, registros e arquivos dos buckets `avatars` e `record-images`
+- [x] Falha no meio do caminho deixa registrado o que ficou. A API responde 500 com `details.step`, `details.note`, `details.remaining` e `details.detail`, e grava o mesmo relato no log
 
 ## Fora desta fase
 
