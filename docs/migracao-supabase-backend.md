@@ -22,7 +22,7 @@ A baseline está marcada como aplicada nesse banco. Não rodar `npm run db:deplo
 - [x] Regra de pastor, coordenador e coordenador de união escrita no SQL da baseline (`can_access_school` e funções vizinhas)
 - [x] `GET /api/me/schools` aplica a regra com o id de quem logou. Pastor e coordenador usam `can_access_school`. Coordenador de união também vê as escolas da união em `user.union_id`
 - [x] Recuperação de senha e reautenticação
-- [ ] Perfil, registros, metas, agenda e exclusão de conta
+- [ ] Metas, agenda e exclusão de conta
 
 ### 1. Vínculo das contas que já existem
 
@@ -41,7 +41,8 @@ A baseline está marcada como aplicada nesse banco. Não rodar `npm run db:deplo
 
 - [x] Funções na baseline: `can_access_school`, `can_access_union`, `can_access_record_scope`, `current_app_role`
 - [x] `GET /api/me/schools` usa essas funções com o id de quem logou
-- [ ] Registros, metas e agenda ainda não passam por essa regra
+- [x] Registros passam por `can_access_record_scope` com o id de quem logou. Alteração e exclusão também exigem que o registro seja do autor
+- [ ] Metas e agenda ainda não passam por essa regra
 
 | Papel               | Escopo                                             |
 | ------------------- | -------------------------------------------------- |
@@ -73,12 +74,12 @@ O app Flutter não entra nestes itens. Google Calendar, PDF e Excel continuam no
 
 ### Registros, arquivos e tópicos
 
-- [ ] `GET /api/topics`: `id` e `name` para usuário autenticado. Sem sessão, 401
-- [ ] `GET /api/records`: ordenado por `created_at` descendente, com escola, união, tópico e `record_files` (`id`, `record_id`, `file_url`, `file_type`, `created_at`, `is_cover`, `focus_x`, `focus_y`)
-- [ ] `POST` grava `title`, `description`, `event_date`, `event_end_date`, `people_count`, `author_name`, `user_id`, `school_id`, `union_id` e `topic_id`, e devolve o id. `school_id` e `union_id` ficam dentro do escopo do autor
-- [ ] `PATCH` altera `title`, `description`, `event_date`, `event_end_date` e `people_count`. `DELETE` remove o registro. Listagem, alteração e exclusão seguem a matriz
-- [ ] Upload em `record-images`, caminho `{userId}/{recordId}/{timestamp}.{ext}`, insert em `record_files` e URL na resposta
-- [ ] Listar por `record_id`, atualizar capa e foco, apagar um arquivo e apagar todos os arquivos de um registro, inclusive o objeto no bucket. Apagar o registro remove os arquivos
+- [x] `GET /api/topics`: `id` e `name` para usuário autenticado. Sem sessão, 401
+- [x] `GET /api/records`: ordenado por `created_at` descendente, com escola, união, tópico e `record_files` (`id`, `record_id`, `file_url`, `file_type`, `created_at`, `is_cover`, `focus_x`, `focus_y`, `focus_scale`)
+- [x] `POST` grava `title`, `description`, `event_date`, `event_end_date`, `people_count`, `author_name`, `user_id`, `school_id`, `union_id` e `topic_id`, e devolve o id. `school_id` e `union_id` ficam dentro do escopo do autor
+- [x] `PATCH` altera `title`, `description`, `event_date`, `event_end_date` e `people_count`. `DELETE` remove o registro. Listagem, alteração e exclusão seguem a matriz
+- [x] Upload em `record-images`, caminho `{userId}/{recordId}/{timestamp}.{ext}`, insert em `record_files` e URL na resposta
+- [x] Listar por `record_id`, atualizar capa e foco, apagar um arquivo e apagar todos os arquivos de um registro, inclusive o objeto no bucket. Apagar o registro remove os arquivos
 
 ### Metas e agenda
 

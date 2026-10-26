@@ -31,7 +31,7 @@ cp .env.example .env
 
 2. Troque `[YOUR-PASSWORD]` em `DATABASE_URL` e `DIRECT_URL` pela senha do banco (Project Settings > Database).
 3. Preencha `SUPABASE_URL` e `SUPABASE_ANON_KEY` do mesmo projeto. A senha continua no Supabase Auth.
-4. Preencha `SUPABASE_SERVICE_ROLE_KEY` do mesmo projeto. Ela fica só na API e grava o avatar no bucket `avatars`.
+4. Preencha `SUPABASE_SERVICE_ROLE_KEY` do mesmo projeto. Ela fica só na API e grava o avatar no bucket `avatars` e as fotos no bucket `record-images`.
 5. Instale as dependências e gere o client:
 
 ```bash
@@ -76,6 +76,16 @@ Depois de alterar `prisma/schema.prisma`, rode `npm run db:generate` e crie uma 
 | GET | `/api/me/schools/associations` | Bearer do Auth | Mapa escola–associação no escopo |
 | GET | `/api/schools` | não | Catálogo `id` e `name` |
 | GET | `/api/unions` | não | Catálogo `id` e `name` |
+| GET | `/api/topics` | Bearer do Auth | Tópicos `id` e `name` |
+| GET | `/api/records` | Bearer do Auth | Registros no escopo, do mais novo ao mais antigo |
+| POST | `/api/records` | Bearer do Auth | Cria registro e devolve `id` |
+| PATCH | `/api/records/:id` | Bearer do Auth | Altera título, descrição, datas e quantidade |
+| DELETE | `/api/records/:id` | Bearer do Auth | Apaga o registro e os arquivos |
+| GET | `/api/records/:id/files` | Bearer do Auth | Arquivos do registro |
+| POST | `/api/records/:id/files` | Bearer do Auth | Envia foto para `record-images` |
+| PATCH | `/api/records/:id/files/:fileId` | Bearer do Auth | Atualiza capa e foco |
+| DELETE | `/api/records/:id/files/:fileId` | Bearer do Auth | Apaga um arquivo e o objeto |
+| DELETE | `/api/records/:id/files` | Bearer do Auth | Apaga todos os arquivos do registro |
 
 Cadastro e login autenticam no Supabase Auth. A ficha lida é `public.user`, pelo mesmo id. O `accessToken` devolvido no login é o token do Auth. Detalhe em [`docs/migracao-supabase-backend.md`](docs/migracao-supabase-backend.md).
 
