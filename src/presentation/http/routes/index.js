@@ -18,6 +18,7 @@ import { createScheduleEventSchema, updateScheduleEventSchema } from '../validat
 
 export function createRouter({
   authController,
+  accountController,
   schoolController,
   userController,
   organizationController,
@@ -59,6 +60,12 @@ export function createRouter({
     authenticate(authGateway),
     validate(updatePasswordSchema),
     authController.resetPassword,
+  );
+  router.post(
+    '/account',
+    authenticate(authGateway),
+    validate(reauthenticateSchema),
+    accountController.remove,
   );
   router.get('/users/me', authenticate(authGateway), userController.show);
   router.patch('/users/me', authenticate(authGateway), validate(updateProfileSchema), userController.update);
