@@ -10,6 +10,9 @@ import { UpdatePassword } from './application/use-cases/auth/UpdatePassword.js';
 import { VerifyRecoveryCode } from './application/use-cases/auth/VerifyRecoveryCode.js';
 import { ListPublicSchools } from './application/use-cases/catalog/ListPublicSchools.js';
 import { ListPublicUnions } from './application/use-cases/catalog/ListPublicUnions.js';
+import { ListGoals } from './application/use-cases/goals/ListGoals.js';
+import { ReadGoalProgress } from './application/use-cases/goals/ReadGoalProgress.js';
+import { UpsertGoal } from './application/use-cases/goals/UpsertGoal.js';
 import { CreateRecord } from './application/use-cases/records/CreateRecord.js';
 import { DeleteRecord } from './application/use-cases/records/DeleteRecord.js';
 import { DeleteRecordFile } from './application/use-cases/records/DeleteRecordFile.js';
@@ -20,6 +23,10 @@ import { ListTopics } from './application/use-cases/records/ListTopics.js';
 import { UpdateRecord } from './application/use-cases/records/UpdateRecord.js';
 import { UpdateRecordFile } from './application/use-cases/records/UpdateRecordFile.js';
 import { UploadRecordFile } from './application/use-cases/records/UploadRecordFile.js';
+import { CreateScheduleEvent } from './application/use-cases/schedule/CreateScheduleEvent.js';
+import { DeleteScheduleEvent } from './application/use-cases/schedule/DeleteScheduleEvent.js';
+import { ListScheduleEvents } from './application/use-cases/schedule/ListScheduleEvents.js';
+import { UpdateScheduleEvent } from './application/use-cases/schedule/UpdateScheduleEvent.js';
 import { GetCurrentUnion } from './application/use-cases/organization/GetCurrentUnion.js';
 import { ListAssociationSchools } from './application/use-cases/organization/ListAssociationSchools.js';
 import { ListLinkedSchools } from './application/use-cases/organization/ListLinkedSchools.js';
@@ -37,7 +44,9 @@ import { PrismaAccessibleSchoolRepository } from './infra/repositories/PrismaAcc
 import { PrismaCatalogRepository } from './infra/repositories/PrismaCatalogRepository.js';
 import { PrismaOrganizationRepository } from './infra/repositories/PrismaOrganizationRepository.js';
 import { PrismaProfileRepository } from './infra/repositories/PrismaProfileRepository.js';
+import { PrismaGoalRepository } from './infra/repositories/PrismaGoalRepository.js';
 import { PrismaRecordRepository } from './infra/repositories/PrismaRecordRepository.js';
+import { PrismaScheduleEventRepository } from './infra/repositories/PrismaScheduleEventRepository.js';
 import { PrismaTopicRepository } from './infra/repositories/PrismaTopicRepository.js';
 import { PrismaUserRepository } from './infra/repositories/PrismaUserRepository.js';
 import { SupabaseAuthGateway } from './infra/security/SupabaseAuthGateway.js';
@@ -45,9 +54,11 @@ import { SupabaseAvatarStorage } from './infra/storage/SupabaseAvatarStorage.js'
 import { SupabaseRecordImageStorage } from './infra/storage/SupabaseRecordImageStorage.js';
 import { AuthController } from './presentation/http/controllers/AuthController.js';
 import { CatalogController } from './presentation/http/controllers/CatalogController.js';
+import { GoalController } from './presentation/http/controllers/GoalController.js';
 import { OrganizationController } from './presentation/http/controllers/OrganizationController.js';
 import { RecordController } from './presentation/http/controllers/RecordController.js';
 import { RecordFileController } from './presentation/http/controllers/RecordFileController.js';
+import { ScheduleEventController } from './presentation/http/controllers/ScheduleEventController.js';
 import { SchoolController } from './presentation/http/controllers/SchoolController.js';
 import { TopicController } from './presentation/http/controllers/TopicController.js';
 import { UserController } from './presentation/http/controllers/UserController.js';
@@ -118,6 +129,19 @@ export function createApp(env) {
     updateRecord: new UpdateRecord({ recordRepository }),
     deleteRecord: new DeleteRecord({ recordRepository, recordImageStorage }),
   });
+  const goalRepository = new PrismaGoalRepository(session);
+  const goalController = new GoalController({
+    listGoals: new ListGoals({ goalRepository }),
+    upsertGoal: new UpsertGoal({ goalRepository }),
+    readGoalProgress: new ReadGoalProgress({ goalRepository }),
+  });
+  const scheduleEventRepository = new PrismaScheduleEventRepository(session);
+  const scheduleEventController = new ScheduleEventController({
+    listScheduleEvents: new ListScheduleEvents({ scheduleEventRepository }),
+    createScheduleEvent: new CreateScheduleEvent({ scheduleEventRepository }),
+    updateScheduleEvent: new UpdateScheduleEvent({ scheduleEventRepository }),
+    deleteScheduleEvent: new DeleteScheduleEvent({ scheduleEventRepository }),
+  });
   const recordFileController = new RecordFileController({
     listRecordFiles: new ListRecordFiles({ recordRepository }),
     uploadRecordFile: new UploadRecordFile({ recordRepository, recordImageStorage }),
@@ -141,6 +165,8 @@ export function createApp(env) {
     topicController,
     recordController,
     recordFileController,
+    goalController,
+    scheduleEventController,
     authGateway,
   }));
   app.use(notFoundHandler);
