@@ -1,10 +1,16 @@
+const transactionMaxWaitMs = 10000;
+const transactionTimeoutMs = 15000;
+
 export class UserDatabaseSession {
   constructor(prisma) {
     this.prisma = prisma;
   }
 
   async asUser(userId, read) {
-    return this.prisma.$transaction((tx) => this.#readAsUser(tx, userId, read));
+    return this.prisma.$transaction((tx) => this.#readAsUser(tx, userId, read), {
+      maxWait: transactionMaxWaitMs,
+      timeout: transactionTimeoutMs,
+    });
   }
 
   async #readAsUser(tx, userId, read) {

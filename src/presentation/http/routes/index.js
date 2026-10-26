@@ -13,6 +13,8 @@ import {
 } from '../validators/authSchemas.js';
 import { replaceSchoolLinksSchema, updateProfileSchema } from '../validators/profileSchemas.js';
 import { createRecordSchema, updateRecordFileSchema, updateRecordSchema } from '../validators/recordSchemas.js';
+import { upsertGoalSchema } from '../validators/goalSchemas.js';
+import { createScheduleEventSchema, updateScheduleEventSchema } from '../validators/scheduleSchemas.js';
 
 export function createRouter({
   authController,
@@ -23,6 +25,8 @@ export function createRouter({
   topicController,
   recordController,
   recordFileController,
+  goalController,
+  scheduleEventController,
   authGateway,
 }) {
   const router = Router();
@@ -92,6 +96,25 @@ export function createRouter({
     recordFileController.update,
   );
   router.delete('/records/:id/files/:fileId', authenticate(authGateway), recordFileController.remove);
+
+  router.get('/goals/progress', authenticate(authGateway), goalController.progress);
+  router.get('/goals', authenticate(authGateway), goalController.list);
+  router.put('/goals', authenticate(authGateway), validate(upsertGoalSchema), goalController.upsert);
+
+  router.get('/schedule-events', authenticate(authGateway), scheduleEventController.list);
+  router.post(
+    '/schedule-events',
+    authenticate(authGateway),
+    validate(createScheduleEventSchema),
+    scheduleEventController.create,
+  );
+  router.patch(
+    '/schedule-events/:id',
+    authenticate(authGateway),
+    validate(updateScheduleEventSchema),
+    scheduleEventController.update,
+  );
+  router.delete('/schedule-events/:id', authenticate(authGateway), scheduleEventController.remove);
 
   return router;
 }

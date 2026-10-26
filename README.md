@@ -86,6 +86,13 @@ Depois de alterar `prisma/schema.prisma`, rode `npm run db:generate` e crie uma 
 | PATCH | `/api/records/:id/files/:fileId` | Bearer do Auth | Atualiza capa e foco |
 | DELETE | `/api/records/:id/files/:fileId` | Bearer do Auth | Apaga um arquivo e o objeto |
 | DELETE | `/api/records/:id/files` | Bearer do Auth | Apaga todos os arquivos do registro |
+| GET | `/api/goals?year=` | Bearer do Auth | Metas do ano do usuário, com o nome do tópico |
+| PUT | `/api/goals` | Bearer do Auth | Upsert em `user_id`, `topic_id`, `year` |
+| GET | `/api/goals/progress?year=&topicId=` | Bearer do Auth | Contagem de registros e soma de `people_count` no ano |
+| GET | `/api/schedule-events` | Bearer do Auth | Agenda visível, ordenada por `start_at`. `googleEventId` busca o evento do autor |
+| POST | `/api/schedule-events` | Bearer do Auth | Cria evento. Público `association` sem `associationId` usa a associação do autor |
+| PATCH | `/api/schedule-events/:id` | Bearer do Auth | Altera o evento do autor |
+| DELETE | `/api/schedule-events/:id` | Bearer do Auth | Apaga o evento do autor |
 
 Cadastro e login autenticam no Supabase Auth. A ficha lida é `public.user`, pelo mesmo id. O `accessToken` devolvido no login é o token do Auth. Detalhe em [`docs/migracao-supabase-backend.md`](docs/migracao-supabase-backend.md).
 

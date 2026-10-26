@@ -22,7 +22,8 @@ A baseline está marcada como aplicada nesse banco. Não rodar `npm run db:deplo
 - [x] Regra de pastor, coordenador e coordenador de união escrita no SQL da baseline (`can_access_school` e funções vizinhas)
 - [x] `GET /api/me/schools` aplica a regra com o id de quem logou. Pastor e coordenador usam `can_access_school`. Coordenador de união também vê as escolas da união em `user.union_id`
 - [x] Recuperação de senha e reautenticação
-- [ ] Metas, agenda e exclusão de conta
+- [x] Metas e agenda
+- [ ] Exclusão de conta
 
 ### 1. Vínculo das contas que já existem
 
@@ -42,7 +43,7 @@ A baseline está marcada como aplicada nesse banco. Não rodar `npm run db:deplo
 - [x] Funções na baseline: `can_access_school`, `can_access_union`, `can_access_record_scope`, `current_app_role`
 - [x] `GET /api/me/schools` usa essas funções com o id de quem logou
 - [x] Registros passam por `can_access_record_scope` com o id de quem logou. Alteração e exclusão também exigem que o registro seja do autor
-- [ ] Metas e agenda ainda não passam por essa regra
+- [x] Metas ficam no usuário autenticado. A agenda lista o que `schedule_event_is_visible` libera e só o autor altera ou apaga, com `schedule_event_audience_allowed`
 
 | Papel               | Escopo                                             |
 | ------------------- | -------------------------------------------------- |
@@ -83,11 +84,11 @@ O app Flutter não entra nestes itens. Google Calendar, PDF e Excel continuam no
 
 ### Metas e agenda
 
-- [ ] `GET /api/goals?year=`: `id`, `topic_id`, `target_count`, `year` e o nome do tópico, só do usuário autenticado
-- [ ] `PUT` faz upsert em `user_goals` na chave `user_id`, `topic_id`, `year`
-- [ ] Progresso: contagem de registros e soma de `people_count` do tópico no ano (`event_date` de 1 de janeiro a 31 de dezembro)
-- [ ] CRUD de `schedule_events` do usuário autenticado, ordenado por `start_at`, com busca por `google_event_id`
-- [ ] Campo com a `association_id` do autor para o público do evento. A sincronização com o Google continua no aparelho; a API guarda `google_event_id`
+- [x] `GET /api/goals?year=`: `id`, `topic_id`, `target_count`, `year` e o nome do tópico, só do usuário autenticado
+- [x] `PUT /api/goals` faz upsert em `user_goals` na chave `user_id`, `topic_id`, `year` e grava `updated_at`
+- [x] `GET /api/goals/progress?year=&topicId=` conta os registros e soma `people_count` do usuário no tópico, com `event_date` de 1 de janeiro a 31 de dezembro
+- [x] CRUD de `schedule_events` visíveis para quem logou, ordenado por `start_at`, com busca por `googleEventId`. Alteração e exclusão só do autor
+- [x] `association_id` do autor (`school_user` → `school.association_id`) preenche o público `association` quando o cliente não envia. A API guarda `google_event_id`. A sincronização com o Google continua no aparelho
 
 ### Exclusão de conta
 
