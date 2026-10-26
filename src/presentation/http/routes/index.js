@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticate } from '../middlewares/authenticate.js';
 import { receiveAvatar } from '../middlewares/uploadAvatar.js';
+import { receiveRecordImage } from '../middlewares/uploadRecordImage.js';
 import { validate } from '../middlewares/validate.js';
 import {
   loginSchema,
@@ -11,6 +12,7 @@ import {
   verifyRecoveryCodeSchema,
 } from '../validators/authSchemas.js';
 import { replaceSchoolLinksSchema, updateProfileSchema } from '../validators/profileSchemas.js';
+import { createRecordSchema, updateRecordFileSchema, updateRecordSchema } from '../validators/recordSchemas.js';
 
 export function createRouter({
   authController,
@@ -18,6 +20,9 @@ export function createRouter({
   userController,
   organizationController,
   catalogController,
+  topicController,
+  recordController,
+  recordFileController,
   authGateway,
 }) {
   const router = Router();
@@ -71,6 +76,22 @@ export function createRouter({
 
   router.get('/schools', catalogController.listSchools);
   router.get('/unions', catalogController.listUnions);
+
+  router.get('/topics', authenticate(authGateway), topicController.list);
+  router.get('/records', authenticate(authGateway), recordController.list);
+  router.post('/records', authenticate(authGateway), validate(createRecordSchema), recordController.create);
+  router.patch('/records/:id', authenticate(authGateway), validate(updateRecordSchema), recordController.update);
+  router.delete('/records/:id', authenticate(authGateway), recordController.remove);
+  router.get('/records/:id/files', authenticate(authGateway), recordFileController.list);
+  router.post('/records/:id/files', authenticate(authGateway), receiveRecordImage, recordFileController.upload);
+  router.delete('/records/:id/files', authenticate(authGateway), recordFileController.removeAll);
+  router.patch(
+    '/records/:id/files/:fileId',
+    authenticate(authGateway),
+    validate(updateRecordFileSchema),
+    recordFileController.update,
+  );
+  router.delete('/records/:id/files/:fileId', authenticate(authGateway), recordFileController.remove);
 
   return router;
 }

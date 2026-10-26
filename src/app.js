@@ -10,6 +10,16 @@ import { UpdatePassword } from './application/use-cases/auth/UpdatePassword.js';
 import { VerifyRecoveryCode } from './application/use-cases/auth/VerifyRecoveryCode.js';
 import { ListPublicSchools } from './application/use-cases/catalog/ListPublicSchools.js';
 import { ListPublicUnions } from './application/use-cases/catalog/ListPublicUnions.js';
+import { CreateRecord } from './application/use-cases/records/CreateRecord.js';
+import { DeleteRecord } from './application/use-cases/records/DeleteRecord.js';
+import { DeleteRecordFile } from './application/use-cases/records/DeleteRecordFile.js';
+import { DeleteRecordFiles } from './application/use-cases/records/DeleteRecordFiles.js';
+import { ListRecordFiles } from './application/use-cases/records/ListRecordFiles.js';
+import { ListRecords } from './application/use-cases/records/ListRecords.js';
+import { ListTopics } from './application/use-cases/records/ListTopics.js';
+import { UpdateRecord } from './application/use-cases/records/UpdateRecord.js';
+import { UpdateRecordFile } from './application/use-cases/records/UpdateRecordFile.js';
+import { UploadRecordFile } from './application/use-cases/records/UploadRecordFile.js';
 import { GetCurrentUnion } from './application/use-cases/organization/GetCurrentUnion.js';
 import { ListAssociationSchools } from './application/use-cases/organization/ListAssociationSchools.js';
 import { ListLinkedSchools } from './application/use-cases/organization/ListLinkedSchools.js';
@@ -27,13 +37,19 @@ import { PrismaAccessibleSchoolRepository } from './infra/repositories/PrismaAcc
 import { PrismaCatalogRepository } from './infra/repositories/PrismaCatalogRepository.js';
 import { PrismaOrganizationRepository } from './infra/repositories/PrismaOrganizationRepository.js';
 import { PrismaProfileRepository } from './infra/repositories/PrismaProfileRepository.js';
+import { PrismaRecordRepository } from './infra/repositories/PrismaRecordRepository.js';
+import { PrismaTopicRepository } from './infra/repositories/PrismaTopicRepository.js';
 import { PrismaUserRepository } from './infra/repositories/PrismaUserRepository.js';
 import { SupabaseAuthGateway } from './infra/security/SupabaseAuthGateway.js';
 import { SupabaseAvatarStorage } from './infra/storage/SupabaseAvatarStorage.js';
+import { SupabaseRecordImageStorage } from './infra/storage/SupabaseRecordImageStorage.js';
 import { AuthController } from './presentation/http/controllers/AuthController.js';
 import { CatalogController } from './presentation/http/controllers/CatalogController.js';
 import { OrganizationController } from './presentation/http/controllers/OrganizationController.js';
+import { RecordController } from './presentation/http/controllers/RecordController.js';
+import { RecordFileController } from './presentation/http/controllers/RecordFileController.js';
 import { SchoolController } from './presentation/http/controllers/SchoolController.js';
+import { TopicController } from './presentation/http/controllers/TopicController.js';
 import { UserController } from './presentation/http/controllers/UserController.js';
 import { errorHandler, notFoundHandler } from './presentation/http/middlewares/errorHandler.js';
 import { createRouter } from './presentation/http/routes/index.js';
@@ -88,6 +104,27 @@ export function createApp(env) {
     listPublicSchools: new ListPublicSchools({ catalogRepository }),
     listPublicUnions: new ListPublicUnions({ catalogRepository }),
   });
+  const recordRepository = new PrismaRecordRepository(session);
+  const recordImageStorage = new SupabaseRecordImageStorage({
+    url: env.supabaseUrl,
+    serviceRoleKey: env.supabaseServiceRoleKey,
+  });
+  const topicController = new TopicController({
+    listTopics: new ListTopics({ topicRepository: new PrismaTopicRepository(prisma) }),
+  });
+  const recordController = new RecordController({
+    listRecords: new ListRecords({ recordRepository }),
+    createRecord: new CreateRecord({ recordRepository, userRepository }),
+    updateRecord: new UpdateRecord({ recordRepository }),
+    deleteRecord: new DeleteRecord({ recordRepository, recordImageStorage }),
+  });
+  const recordFileController = new RecordFileController({
+    listRecordFiles: new ListRecordFiles({ recordRepository }),
+    uploadRecordFile: new UploadRecordFile({ recordRepository, recordImageStorage }),
+    updateRecordFile: new UpdateRecordFile({ recordRepository }),
+    deleteRecordFile: new DeleteRecordFile({ recordRepository, recordImageStorage }),
+    deleteRecordFiles: new DeleteRecordFiles({ recordRepository, recordImageStorage }),
+  });
 
   const app = express();
 
@@ -101,6 +138,9 @@ export function createApp(env) {
     userController,
     organizationController,
     catalogController,
+    topicController,
+    recordController,
+    recordFileController,
     authGateway,
   }));
   app.use(notFoundHandler);
