@@ -10,29 +10,18 @@ export class PrismaUserRepository extends UserRepository {
   }
 
   async findByEmail(email) {
-    const row = await this.#findUnique({ email });
+    const row = await this.#findFirst({ email, deletedAt: null });
     return this.#toEntity(row);
   }
 
   async findById(id) {
-    const row = await this.#findUnique({ id });
+    const row = await this.#findFirst({ id, deletedAt: null });
     return this.#toEntity(row);
   }
 
-  async create({ name, email, passwordHash }) {
+  async #findFirst(where) {
     try {
-      const row = await this.prisma.user.create({
-        data: { name, email, passwordHash },
-      });
-      return this.#toEntity(row);
-    } catch (error) {
-      throw this.#toCreateError(error);
-    }
-  }
-
-  async #findUnique(where) {
-    try {
-      return await this.prisma.user.findUnique({ where });
+      return await this.prisma.user.findFirst({ where });
     } catch (error) {
       return this.#recoverFind(error);
     }
@@ -43,19 +32,63 @@ export class PrismaUserRepository extends UserRepository {
     throw new AppError('Falha ao consultar usuário', 500);
   }
 
-  #toCreateError(error) {
-    if (this.#isUniqueEmail(error)) {
-      return new AppError('E-mail já cadastrado', 409);
-    }
-
-    return new AppError('Falha ao criar usuário', 500);
-  }
-
   #isInvalidIdentifier(error) {
     return error instanceof PrismaClientKnownRequestError && error.code === 'P2023';
   }
 
-  #isUniqueEmail(error) {
+  async assignUnion(userId, unionId) {
+    try {
+      await this.prisma.$transaction((tx) => this.#saveUnionScope(tx, userId, unionId));
+    } catch (error) {
+      throw this.#scopeError(error, 'União inválida');
+    }
+  }
+
+  async linkSchools(userId, schoolIds) {
+    for (const schoolId of schoolIds) {
+      await this.#linkSchool(userId, schoolId);
+    }
+  }
+
+  async #linkSchool(userId, schoolId) {
+    try {
+      await this.prisma.schoolUser.create({ data: this.#schoolLink(userId, schoolId) });
+    } catch (error) {
+      this.#keepExistingLink(error);
+    }
+  }
+
+  #keepExistingLink(error) {
+    if (this.#isDuplicate(error)) return;
+    throw this.#scopeError(error, 'Escola inválida');
+  }
+
+  async #saveUnionScope(tx, userId, unionId) {
+    await tx.user.update({
+      where: { id: userId },
+      data: { unionId: BigInt(unionId) },
+    });
+    await tx.schoolUser.deleteMany({ where: { userId } });
+  }
+
+  #schoolLink(userId, schoolId) {
+    return {
+      userId,
+      schoolId: BigInt(schoolId),
+    };
+  }
+
+  #scopeError(error, message) {
+    if (this.#isForeignKey(error)) throw new AppError(message, 400);
+    console.error(error);
+    throw new AppError('Falha ao criar usuário', 500);
+  }
+
+  #isForeignKey(error) {
+    return error instanceof PrismaClientKnownRequestError && error.code === 'P2003';
+  }
+
+  #isDuplicate(error) {
     return error instanceof PrismaClientKnownRequestError && error.code === 'P2002';
   }
 
@@ -66,7 +99,7 @@ export class PrismaUserRepository extends UserRepository {
       id: row.id,
       name: row.name,
       email: row.email,
-      passwordHash: row.passwordHash,
+      role: row.role,
       createdAt: row.createdAt,
     });
   }

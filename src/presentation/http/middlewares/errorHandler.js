@@ -12,10 +12,6 @@ export function errorHandler(error, _req, res, _next) {
     });
   }
 
-  if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
-    return res.status(401).json({ error: 'Token inválido ou expirado' });
-  }
-
   console.error(error);
   return res.status(500).json({ error: 'Erro interno do servidor' });
 }

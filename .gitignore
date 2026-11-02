@@ -1,6 +1,7 @@
 node_modules/
 generated/
 .env
+supabase/.temp/
 .DS_Store
 npm-debug.log*
 coverage/
