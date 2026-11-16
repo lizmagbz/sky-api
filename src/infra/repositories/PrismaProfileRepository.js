@@ -10,12 +10,22 @@ export class PrismaProfileRepository extends ProfileRepository {
   }
 
   async findByUserId(userId) {
-    const row = await this.prisma.user.findFirst({
-      where: { id: userId, deletedAt: null },
-      include: this.#profileInclude(),
-    });
+    const [row, profile] = await Promise.all([
+      this.prisma.user.findFirst({
+        where: { id: userId, deletedAt: null },
+        include: this.#profileInclude(),
+      }),
+      this.#counts(userId),
+    ]);
     if (!row) return null;
-    return new UserProfile(this.#toProfile(row));
+    return new UserProfile(this.#toProfile(row, profile));
+  }
+
+  #counts(userId) {
+    return this.prisma.profile.findUnique({
+      where: { id: userId },
+      select: { classCount: true, chapelCount: true },
+    });
   }
 
   #profileInclude() {
@@ -47,15 +57,25 @@ export class PrismaProfileRepository extends ProfileRepository {
   }
 
   async #write(tx, userId, change) {
-    const data = this.#data(change);
-    if (Object.keys(data).length > 0) {
-      await tx.user.update({ where: { id: userId }, data });
-    }
+    await this.#updateUser(tx, userId, change);
+    await this.#updateCounts(tx, userId, change);
     if (!change.removeSchoolLinks) return;
     await tx.schoolUser.deleteMany({ where: { userId } });
   }
 
-  #data(change) {
+  async #updateUser(tx, userId, change) {
+    const data = this.#userData(change);
+    if (Object.keys(data).length === 0) return;
+    await tx.user.update({ where: { id: userId }, data });
+  }
+
+  async #updateCounts(tx, userId, change) {
+    const data = this.#countData(change);
+    if (Object.keys(data).length === 0) return;
+    await tx.profile.update({ where: { id: userId }, data });
+  }
+
+  #userData(change) {
     const data = {};
     if (change.name != null) data.name = change.name;
     if (change.role != null) data.role = change.role;
@@ -64,6 +84,13 @@ export class PrismaProfileRepository extends ProfileRepository {
     if (change.avatarFocusScale != null) data.avatarFocusScale = change.avatarFocusScale;
     if (change.unionId != null) data.unionId = BigInt(change.unionId);
     if (change.clearUnion) data.unionId = null;
+    return data;
+  }
+
+  #countData(change) {
+    const data = {};
+    if (change.classCount != null) data.classCount = change.classCount;
+    if (change.chapelCount != null) data.chapelCount = change.chapelCount;
     return data;
   }
 
@@ -116,7 +143,7 @@ export class PrismaProfileRepository extends ProfileRepository {
     }
   }
 
-  #toProfile(row) {
+  #toProfile(row, profile) {
     return {
       id: row.id,
       name: row.name,
@@ -126,6 +153,8 @@ export class PrismaProfileRepository extends ProfileRepository {
       avatar_focus_x: row.avatarFocusX,
       avatar_focus_y: row.avatarFocusY,
       avatar_focus_scale: row.avatarFocusScale,
+      class_count: profile?.classCount ?? 0,
+      chapel_count: profile?.chapelCount ?? 0,
       union_id: this.#numberOrNull(row.unionId),
       unions: this.#named(row.union),
       school_user: row.schoolUsers.map((link) => this.#schoolLink(link)).filter(Boolean),

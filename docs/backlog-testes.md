@@ -43,7 +43,7 @@ O token de cada uma sai de `POST /api/auth/login`. O app, no mesmo momento, entr
 
 ## 0. Os dois sobem e o app antigo segue inteiro
 
-- [ ] `GET http://localhost:3000/api/health` responde `{ "status": "ok" }`.
+- [x] `GET http://localhost:3000/api/health` responde `{ "status": "ok" }`.
 - [ ] O app em development abre, entra e lista o que já listava, sem a API no ar.
 - [ ] Com a API no ar, o app entra de novo. O caminho continua o Supabase.
 
@@ -57,35 +57,35 @@ Espelho de `AuthService.login`, `SplashService.fetchCurrentSession` e `SignUpSer
 - [x] Cadastro mínimo cria a conta no Auth e a linha em `public.user` com o mesmo id. A resposta não traz token.
 - [x] E-mail repetido responde 409.
 - [ ] Repita o login no app com a mesma conta. O app entra pelo Supabase.
-- [ ] Apague a conta criada neste teste antes de seguir.
+- [x] Apague a conta criada neste teste antes de seguir.
 
 ## 2. Escolas que cada papel vê
 
 Espelho de `SchoolScopeService`: pastor pelas escolas de `school_user`, coordenador pela associação, coordenador de união pelas escolas da união em `user.union_id`.
 
 - [x] `GET /api/me/schools` sem token responde 401.
-- [ ] Pastor recebe só as escolas do vínculo. Conferir o número com o app na tela de escolas desse pastor.
-- [ ] Coordenador recebe as escolas da associação, não a lista inteira.
-- [ ] Coordenador de união recebe as escolas da união, mesmo sem linha em `school_user`.
-- [ ] Um papel não recebe a escola que o app esconde para esse usuário.
+- [x] Pastor recebe só as escolas do vínculo. Conferir o número com o app na tela de escolas desse pastor.
+- [x] Coordenador recebe as escolas da associação, não a lista inteira.
+- [x] Coordenador de união recebe as escolas da união, mesmo sem linha em `school_user`.
+- [x] Um papel não recebe a escola que o app esconde para esse usuário.
 
 ## 3. Catálogos do cadastro, antes do login
 
 Espelho de `SignUpService.getSchools` e `getUnions`. São listas públicas de `id` e `name`, ordenadas por nome. Não trazem usuários.
 
-- [ ] `GET /api/schools` sem token devolve as mesmas escolas que o app mostra no cadastro.
-- [ ] `GET /api/unions` sem token devolve as mesmas uniões.
-- [ ] As duas rotas não devolvem e-mail, papel nem vínculo.
+- [x] `GET /api/schools` sem token devolve as mesmas escolas que o app mostra no cadastro.
+- [x] `GET /api/unions` sem token devolve as mesmas uniões.
+- [x] As duas rotas não devolvem e-mail, papel nem vínculo.
 
 ## 4. Cadastro com papel, escola e união
 
 Espelho de `SignUpService.signUp` com `role`, `schoolId`, `additionalSchoolIds` e `unionId`.
 
-- [ ] Pastor com uma escola: `user.role` é `pastor` e existe `school_user` dessa escola.
-- [ ] Pastor com escolas adicionais: cada id extra vira uma linha em `school_user`.
-- [ ] Coordenador de união com `unionId`: `user.union_id` fica preenchido e não sobra `school_user` desse usuário.
+- [x] Pastor com uma escola: `user.role` é `pastor` e existe `school_user` dessa escola.
+- [x] Pastor com escolas adicionais: cada id extra vira uma linha em `school_user`.
+- [x] Coordenador de união com `unionId`: `user.union_id` fica preenchido e não sobra `school_user` desse usuário.
 - [ ] A resposta não traz token. O login seguinte, na API e no app, entra.
-- [ ] Apague essas contas de teste.
+- [x] Apague essas contas de teste.
 
 ## 5. Perfil
 
@@ -93,26 +93,26 @@ Espelho de `UserProfileService.fetchCurrentProfile` e `updateUser`.
 
 Campos que o app lê: `id`, `name`, `email`, `role`, `avatar_url`, `avatar_focus_x`, `avatar_focus_y`, `union_id`, união (`id`, `name`) e `school_user` com escola, associação e união.
 
-- [ ] `GET /api/users/me` devolve esse formato para os três papéis.
-- [ ] `PATCH` altera o nome. Papel e união não mudam por esse caminho se o app não permite.
-- [ ] Trocar vínculos apaga os links informados e insere os novos, como `deleteSchoolLinks` e `insertSchoolLinks`.
-- [ ] Coordenador de união não ganha `school_user` por essa troca.
+- [x] `GET /api/users/me` devolve esse formato para os três papéis.
+- [x] `PATCH` altera o nome. Papel e união não mudam por esse caminho se o app não permite.
+- [x] Trocar vínculos apaga os links informados e insere os novos, como `deleteSchoolLinks` e `insertSchoolLinks`.
+- [x] Coordenador de união não ganha `school_user` por essa troca.
 - [ ] O app, ainda no Supabase, abre o perfil da mesma conta e mostra o nome novo. Apague o teste ou volte o nome.
 
 ## 6. Avatar
 
 Espelho de `UserProfileService.uploadAvatar`. Bucket `avatars`, caminho `{userId}/avatar.jpg`.
 
-- [ ] `POST /api/users/me/avatar` grava o arquivo e devolve a URL.
-- [ ] Um segundo envio substitui o arquivo. A URL que o app abriria continua válida.
-- [ ] O app não passa a chamar `storage.from`. Este teste é só na API.
+- [x] `POST /api/users/me/avatar` grava o arquivo e devolve a URL.
+- [x] Um segundo envio substitui o arquivo. A URL que o app abriria continua válida.
+- [x] O app não passa a chamar `storage.from`. Este teste é só na API.
 
 ## 7. Tópicos
 
 Espelho de `TopicService.fetchTopics`: `id` e `name` para quem está logado. Sem usuário, o app devolve lista vazia. Na API, sem token, 401.
 
-- [ ] `GET /api/topics` com token devolve os mesmos tópicos do app.
-- [ ] Sem token, 401.
+- [x] `GET /api/topics` com token devolve os mesmos tópicos do app.
+- [x] Sem token, 401.
 
 ## 8. Registros
 
@@ -120,53 +120,53 @@ Espelho de `RecordService`. A lista usa o escopo de `can_access_record_scope`: e
 
 O app seleciona o registro com `school(name, association(name))`, `unions(name)`, `topics(name)` e `record_files` (`id`, `record_id`, `file_url`, `file_type`, `created_at`, `is_cover`, `focus_x`, `focus_y`), do mais novo para o mais antigo.
 
-- [ ] `GET /api/records` de um pastor não inclui registro de escola fora do vínculo.
-- [ ] O coordenador vê os registros das escolas da associação.
-- [ ] O coordenador de união vê os registros das escolas da união e o registro ligado direto à união.
-- [ ] `POST` grava `title`, `description`, `event_date`, `event_end_date`, `people_count`, `author_name`, `user_id`, `school_id`, `union_id`, `topic_id` e devolve o id.
-- [ ] `school_id` ou `union_id` fora do escopo do autor responde erro e não grava.
-- [ ] `PATCH` altera só `title`, `description`, `event_date`, `event_end_date` e `people_count`.
-- [ ] `DELETE` remove o registro.
-- [ ] O registro criado no teste é apagado. O app antigo não fica com atividade de teste.
+- [x] `GET /api/records` de um pastor não inclui registro de escola fora do vínculo.
+- [x] O coordenador vê os registros das escolas da associação.
+- [x] O coordenador de união vê os registros das escolas da união e o registro ligado direto à união.
+- [x] `POST` grava `title`, `description`, `event_date`, `event_end_date`, `people_count`, `author_name`, `user_id`, `school_id`, `union_id`, `topic_id` e devolve o id.
+- [x] `school_id` ou `union_id` fora do escopo do autor responde erro e não grava.
+- [x] `PATCH` altera só `title`, `description`, `event_date`, `event_end_date` e `people_count`.
+- [x] `DELETE` remove o registro.
+- [x] O registro criado no teste é apagado. O app antigo não fica com atividade de teste.
 
 ## 9. Arquivos do registro
 
 Espelho de `RecordFileService`. Bucket `record-images`, caminho `{userId}/{recordId}/{timestamp}.{ext}`.
 
-- [ ] Upload devolve a URL e cria `record_files`.
-- [ ] Listar por `record_id` traz os arquivos.
-- [ ] Atualizar `is_cover`, `focus_x` e `focus_y`.
-- [ ] Apagar um arquivo remove a linha e o objeto no bucket.
-- [ ] Apagar o registro remove os arquivos antes, na mesma ordem do app.
-- [ ] Limpe o registro de teste.
+- [x] Upload devolve a URL e cria `record_files`.
+- [x] Listar por `record_id` traz os arquivos.
+- [x] Atualizar `is_cover`, `focus_x` e `focus_y`.
+- [x] Apagar um arquivo remove a linha e o objeto no bucket.
+- [x] Apagar o registro remove os arquivos antes, na mesma ordem do app.
+- [x] Limpe o registro de teste.
 
 ## 10. Metas
 
 Espelho de `GoalService`.
 
-- [ ] `GET /api/goals?year=` devolve `id`, `topic_id`, `target_count`, `year` e o nome do tópico, só do usuário do token.
-- [ ] `PUT` faz upsert em `user_id`, `topic_id`, `year` e grava `updated_at`.
-- [ ] O progresso conta registros e soma `people_count` com `event_date` entre 1 de janeiro e 31 de dezembro daquele ano.
-- [ ] A meta de teste é removida ou volta ao valor anterior.
+- [x] `GET /api/goals?year=` devolve `id`, `topic_id`, `target_count`, `year` e o nome do tópico, só do usuário do token.
+- [x] `PUT` faz upsert em `user_id`, `topic_id`, `year` e grava `updated_at`.
+- [x] O progresso conta registros e soma `people_count` com `event_date` entre 1 de janeiro e 31 de dezembro daquele ano.
+- [x] A meta de teste é removida ou volta ao valor anterior.
 
 ## 11. Agenda
 
 Espelho de `ScheduleService`. O Google continua no aparelho. A API só guarda `schedule_events`, inclusive `google_event_id`.
 
-- [ ] Listar os eventos do usuário, ordenados por `start_at`.
-- [ ] Criar, editar e apagar um evento.
-- [ ] Buscar por `google_event_id`.
-- [ ] A resposta inclui a `association_id` que o app hoje lê de `school_user` para `school.association_id`, quando o evento é da associação.
-- [ ] Apague o evento de teste.
+- [x] Listar os eventos do usuário, ordenados por `start_at`.
+- [x] Criar, editar e apagar um evento.
+- [x] Buscar por `google_event_id`.
+- [x] A resposta inclui a `association_id` que o app hoje lê de `school_user` para `school.association_id`, quando o evento é da associação.
+- [x] Apague o evento de teste.
 
 ## 12. Senha de novo e exclusão
 
 Espelho de `AuthService.reauthenticateWithPassword`, `sendPasswordResetEmail`, `updatePassword` e `AccountDeletionService`.
 
 - [x] `POST /api/auth/reauthenticate` com senha certa responde sucesso e não emite outro token. Senha errada, 401.
-- [ ] Pedido de recuperação para e-mail inexistente responde como sucesso.
-- [ ] Código expirado ou incorreto não altera a senha no Auth.
-- [ ] `POST /api/account` pede a senha de novo e apaga usuário, `school_user`, metas, agenda, registros e arquivos dos buckets `avatars` e `record-images`.
+- [x] Pedido de recuperação para e-mail inexistente responde como sucesso.
+- [x] Código expirado ou incorreto não altera a senha no Auth.
+- [x] `POST /api/account` pede a senha de novo e apaga usuário, `school_user`, metas, agenda, registros e arquivos dos buckets `avatars` e `record-images`.
 - [ ] Use só a conta descartável. Confirme no app que essa conta não entra mais e que uma conta antiga continua entrando.
 
 ## 13. Regressão do app que não pode quebrar

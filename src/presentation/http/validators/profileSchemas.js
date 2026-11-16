@@ -8,6 +8,8 @@ export const updateProfileSchema = z.strictObject({
   avatarFocusX: z.number().min(-1).max(1).optional(),
   avatarFocusY: z.number().min(-1).max(1).optional(),
   avatarFocusScale: z.number().min(1).max(3).optional(),
+  classCount: z.number().int().nonnegative('A quantidade de aulas deve ser zero ou maior').optional(),
+  chapelCount: z.number().int().nonnegative('A quantidade de celebrações/capelas deve ser zero ou maior').optional(),
 });
 
 export const replaceSchoolLinksSchema = z.strictObject({

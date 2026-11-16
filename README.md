@@ -65,7 +65,7 @@ Depois de alterar `prisma/schema.prisma`, rode `npm run db:generate` e crie uma 
 | GET | `/api/auth/me` | Bearer do Auth | Usuário autenticado |
 | GET | `/api/me/schools` | Bearer do Auth | Escolas que o papel pode ver |
 | GET | `/api/users/me` | Bearer do Auth | Perfil com união, avatar e vínculos |
-| PATCH | `/api/users/me` | Bearer do Auth | Atualiza nome, papel, união e foco do avatar |
+| PATCH | `/api/users/me` | Bearer do Auth | Atualiza nome, papel, união, foco do avatar e quantidades de aulas e de celebrações/capelas |
 | PUT | `/api/users/me/schools` | Bearer do Auth | Substitui vínculos `school_user` |
 | POST | `/api/users/me/avatar` | Bearer do Auth | Grava `avatars/{userId}/avatar.jpg` |
 | GET | `/api/me/schools/linked` | Bearer do Auth | Escolas do vínculo |

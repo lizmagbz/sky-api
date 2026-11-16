@@ -253,10 +253,12 @@ model Profile {
   id        String    @id @db.Uuid
   name      String    @default("")
   email     String    @default("")
-  avatarUrl String?   @map("avatar_url")
-  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
+  avatarUrl   String?   @map("avatar_url")
+  classCount  Int       @default(0) @map("class_count")
+  chapelCount Int       @default(0) @map("chapel_count")
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @default(now()) @map("updated_at") @db.Timestamptz(6)
 
   @@index([email], map: "idx_profiles_email")
   @@map("profiles")

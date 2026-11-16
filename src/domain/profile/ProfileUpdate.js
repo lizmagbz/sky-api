@@ -9,6 +9,7 @@ export class ProfileUpdate {
 
   assertAllowed() {
     this.#rejectEmpty();
+    this.#assertCounts();
     if (this.#nextRole() === unionCoordinatorRole) {
       this.#assertUnionCoordinator();
       return;
@@ -23,6 +24,8 @@ export class ProfileUpdate {
       avatarFocusX: this.patch.avatarFocusX,
       avatarFocusY: this.patch.avatarFocusY,
       avatarFocusScale: this.patch.avatarFocusScale,
+      classCount: this.patch.classCount,
+      chapelCount: this.patch.chapelCount,
       unionId: this.#assignedUnionId(),
       clearUnion: this.#clearsUnion(),
       removeSchoolLinks: this.#removesSchoolLinks(),
@@ -40,6 +43,20 @@ export class ProfileUpdate {
   #rejectEmpty() {
     if (this.#hasField()) return;
     throw new AppError('Nenhum campo para atualizar', 400);
+  }
+
+  #assertCounts() {
+    this.#assertCount(this.patch.classCount, 'A quantidade de aulas deve ser zero ou maior');
+    this.#assertCount(
+      this.patch.chapelCount,
+      'A quantidade de celebrações/capelas deve ser zero ou maior',
+    );
+  }
+
+  #assertCount(value, message) {
+    if (value === undefined) return;
+    if (Number.isInteger(value) && value >= 0) return;
+    throw new AppError(message, 400);
   }
 
   #hasField() {
